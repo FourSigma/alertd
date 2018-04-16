@@ -77,7 +77,7 @@ func (u User) Key() UserKey {
 }
 
 func (u *User) FieldSet() util.FieldSet {
-	return util.NewFieldSet(
+	return util.NewFieldSet("User",
 		util.NewField("Id", u.Id, &u.Id, false),
 		util.NewField("FirstName", u.FirstName, &u.FirstName, true),
 		util.NewField("LastName", u.LastName, &u.LastName, true),
@@ -98,6 +98,12 @@ func (f UserKey) Args() []interface{} {
 	return []interface{}{
 		f.Id,
 	}
+}
+
+func (u *UserKey) FieldSet() util.FieldSet {
+	return util.NewFieldSet("UserKey",
+		util.NewField("Id", u.Id, &u.Id, false),
+	)
 }
 
 //Users can only have one active key at a time.

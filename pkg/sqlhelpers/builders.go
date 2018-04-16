@@ -32,13 +32,13 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 		}
 	}
 
-	fmt.Fprint(buf, ") ")
+	fmt.Fprint(buf, ") RETURNING *")
 
 	return buf.String()
 
 }
 
-func InQueryPlaceholder(total int, keyLen int) string {
+func KeyInPlaceholder(total int, keyLen int) string {
 	buf := &bytes.Buffer{}
 	all := total * keyLen
 	als := make([]string, all)

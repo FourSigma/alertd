@@ -11,11 +11,11 @@ type Zeroer interface {
 	IsZero() bool
 }
 
-func NewFieldSet(fs ...Field) FieldSet {
+func NewFieldSet(ename string, fs ...Field) FieldSet {
 	for i, v := range fs {
 		v.pos = uint8(i)
 	}
-	return FieldSet{fls: fs}
+	return FieldSet{name: ename, fls: fs}
 }
 
 func NewField(name string, value interface{}, ptr interface{}, canUpdate bool) Field {
@@ -78,7 +78,12 @@ func (f *Field) IsZero() bool {
 }
 
 type FieldSet struct {
-	fls []Field
+	name string
+	fls  []Field
+}
+
+func (f FieldSet) Name() string {
+	return f.name
 }
 
 func (f FieldSet) Diff(cmp FieldSet) (diff FieldSet) {
