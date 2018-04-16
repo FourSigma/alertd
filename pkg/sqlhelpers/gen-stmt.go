@@ -26,29 +26,41 @@ type genStmt struct {
 	fls  []string
 	kfls []string
 	mFn  func(string) string
+
+	cache struct {
+		insertStmt string
+		deleteStmt string
+		getStmt    string
+	}
 }
 
-func (g genStmt) GenericCreateStmt() (stmt string) {
-	stmt = fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s) RETURNING *", g.modifierFn(g.table), strings.Join(Modify(g.fls, g.mFn), ", "), Placeholder(len(fls)))
-	fmt.Println(stmt)
-	return
+func (g genStmt) GenericInsertStmt() (stmt string) {
+	if g.cache.insertStmt != "" {
+		return g.cache.insertStmt
+	}
+	g.cache.insertStmt = fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s) RETURNING *", g.modifierFn(g.table), strings.Join(Modify(g.fls, g.mFn), ", "), Placeholder(len(fls)))
+	return g.cache.insertStmt
 }
 
 func (g genStmt) GenericDeleteStmt() (stmt string) {
-	stmt = fmt.Sprintf("DELETE FROM %s WHERE (%s) IN (%s)", g.modifierFn(g.table), strings.Join(Modify(g.fls, g.mFn), ","), Placeholder(len(kfls)))
-	fmt.Println(stmt)
-	return
+	if g.cache.deleteStmt != "" {
+		return g.cache.deleteStmt
+	}
+	g.cache.deleteStmt = fmt.Sprintf("DELETE FROM %s WHERE (%s) IN (%s)", g.modifierFn(g.table), strings.Join(Modify(g.fls, g.mFn), ","), Placeholder(len(kfls)))
+	return g.cache.deleteStmt
 }
 
 func (g genStmt) GenericGetStmt() (stmt string) {
-	stmt = fmt.Sprintf(
+	if g.cache.getStmt != "" {
+		return g.cache.getStmt
+	}
+	g.cache.getStmt = fmt.Sprintf(
 		"SELECT * FROM %s WHERE (%s) IN (%s)",
 		g.modifierFn(g.table),
 		strings.Join(Modify(g.fls, g.mFn), ","),
 		Placeholder(len(fls)),
 	)
-	fmt.Println(stmt, args)
-	return
+	return g.cache.getStmt
 }
 
 func ModifyStringList(ls []string, mFn func(string) string) (rs []string) {
