@@ -1,32 +1,41 @@
 package sqlhelpers
 
-type FieldValueList struct {
-	tname string
-	als   []*fieldValue
-	kls   []*fieldValue
+func NewFieldValueList(tn string) *fieldValueList {
+	return &fieldValueList{tname: tn}
 }
 
-func (f *FieldValueList) AddAttributeField(fname string, val interface{}) {
+type fieldValueList struct {
+	tname        string
+	als          []*fieldValue
+	kls          []*fieldValue
+	isUpdateable bool
+}
+
+func (f *fieldValueList) AddAttributeField(fname string, val interface{}) {
 	f.als = append(f.als, &fieldValue{FieldName: fname, Value: val})
 }
 
-func (f *FieldValueList) AddKeyField(fname string, val interface{}) {
+func (f *fieldValueList) AddKeyField(fname string, val interface{}) {
 	f.kls = append(f.kls, &fieldValue{FieldName: fname, Value: val})
 }
 
-func (f *FieldValueList) AttributeCount() int {
+func (f *fieldValueList) AttributeCount() int {
 	return len(f.als)
 }
 
-func (f *FieldValueList) KeyCount() int {
+func (f *fieldValueList) KeyCount() int {
 	return len(f.kls)
 }
 
-func (f *FieldValueList) Table() string {
+func (f *fieldValueList) Table() string {
 	return f.tname
 }
 
-func (f *FieldValueList) FieldNameAndArgs() (fs []string, fargs []interface{}, ks []string, kargs []interface{}) {
+func (f *fieldValueList) IsUpdateable() bool {
+	return f.isUpdateable
+}
+
+func (f *fieldValueList) FieldNameAndArgs() (fs []string, fargs []interface{}, ks []string, kargs []interface{}) {
 	fs = make([]string, f.AttributeCount())
 	fargs = make([]interface{}, f.AttributeCount())
 	ks = make([]string, f.KeyCount())
@@ -35,10 +44,12 @@ func (f *FieldValueList) FieldNameAndArgs() (fs []string, fargs []interface{}, k
 	for i, v := range f.als {
 		fs[i], fargs[i] = v.FieldName, v.Value
 	}
+	if len(fs) > 0 {
+		f.isUpdateable = true
+	}
 	for i, v := range f.kls {
 		ks[i], kargs[i] = v.FieldName, v.Value
 	}
-
 	return
 }
 

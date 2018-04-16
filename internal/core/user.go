@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/FourSigma/alertd/pkg/util"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -45,9 +46,15 @@ func (u UserList) KeyList() (kl []UserKey) {
 	return
 }
 
-type UserFilterActiveUsers struct{}
+type FilterUserActiveUsers struct{}
 
-func (_ UserFilterActiveUsers) UserFilter() {}
+func (_ FilterUserActiveUsers) UserFilter() {}
+
+type FilterUserKeyIn struct {
+	KeyList []UserKey
+}
+
+func (_ FilterUserKeyIn) UserFilter() {}
 
 type UserStateId string
 type User struct {
@@ -55,7 +62,6 @@ type User struct {
 	FirstName    string
 	LastName     string
 	Email        string
-	Password     string
 	PasswordSalt string
 	PasswordHash string
 	StateId      UserStateId
@@ -70,17 +76,39 @@ func (u User) Key() UserKey {
 	}
 }
 
+func (u *User) FieldSet() util.FieldSet {
+	return util.NewFieldSet(
+		util.NewField("Id", u.Id, &u.Id, false),
+		util.NewField("FirstName", u.FirstName, &u.FirstName, true),
+		util.NewField("LastName", u.LastName, &u.LastName, true),
+		util.NewField("Email", u.Email, &u.Email, true),
+		util.NewField("PasswordSalt", u.PasswordSalt, &u.PasswordSalt, true),
+		util.NewField("PasswordHash", u.PasswordHash, &u.PasswordHash, true),
+		util.NewField("StateId", u.StateId, &u.StateId, true),
+		util.NewField("CreatedAt", u.CreatedAt, &u.CreatedAt, false),
+		util.NewField("UpdatedAt", u.UpdatedAt, &u.UpdatedAt, true),
+	)
+}
+
 type UserKey struct {
 	Id uuid.UUID
+}
+
+func (f UserKey) Args() []interface{} {
+	return []interface{}{
+		f.Id,
+	}
 }
 
 //Users can only have one active key at a time.
 //Tokens are unique
 type UserTokenStateId string
 type UserToken struct {
-	UserId  uuid.UUID
-	Token   string
-	StateId UserTokenStateId
+	UserId    uuid.UUID
+	Token     string
+	StateId   UserTokenStateId
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type UserTokenKey struct {

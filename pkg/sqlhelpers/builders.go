@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 )
 
 func BuildUpdateQuery(tn string, fs []string, ks []string) string {
@@ -35,4 +36,33 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 
 	return buf.String()
 
+}
+
+func InQueryPlaceholder(total int, keyLen int) string {
+	buf := &bytes.Buffer{}
+	all := total * keyLen
+	als := make([]string, all)
+	tls := make([]string, total)
+
+	for i := 0; i < all; i++ {
+		als[i] = fmt.Sprintf("$%d", i+1)
+	}
+
+	for i, s, als := 0, als[:keyLen], als[keyLen:]; ; i, s, als = i+1, als[:keyLen], als[keyLen:] {
+		tls[i] = fmt.Sprintf("(%s)", strings.Join(s, ","))
+		if len(als) == 0 {
+			break
+		}
+	}
+
+	fmt.Fprintf(buf, "(%s)", strings.Join(tls, ", "))
+	return buf.String()
+}
+
+func StringNotEqualAndNotEmpty(src string, dest string) bool {
+	return (src != dest) && (src != "")
+}
+
+func TimeNotEqualAndNotEmpty(src time.Time, dest time.Time) bool {
+	return !src.Equal(dest) && !src.IsZero()
 }
