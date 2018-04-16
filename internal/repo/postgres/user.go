@@ -22,19 +22,16 @@ func GetDBFromContext(ctx context.Context) (db *sqlx.DB, err error) {
 	return
 }
 
-type userRepo struct{}
+type userRepo struct {
+	gen *sqlhelpers.StatementGenerator
+}
 
 func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
 	db, err := GetDBFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = db.ExecContext(ctx,
-		`INSERT INTO
-           user(id, first_name, last_name, email, password, password_salt, password_hash, state_id, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		user.Id, user.FirstName, user.LastName, user.Email, user.PasswordSalt, user.PasswordHash, user.StateId, user.CreatedAt, user.UpdatedAt)
-	if err != nil {
+	if _, err = db.ExecContext(ctx, u.gen.InsertStmt(), user.FieldSet().Ptrs()...); err != nil {
 		return
 	}
 	return
@@ -45,7 +42,7 @@ func (u userRepo) Delete(ctx context.Context, key core.UserKey) (err error) {
 	if err != nil {
 		return err
 	}
-	if _, err = db.ExecContext(ctx, `DELETE FROM user WHERE (id) IN ($1)`, key.Id); err != nil {
+	if _, err = db.ExecContext(ctx, u.gen.DeleteStmt(), key.FieldSet().Args()); err != nil {
 		return
 	}
 	return

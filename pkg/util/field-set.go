@@ -134,14 +134,14 @@ func (f *FieldSet) Add(nf Field) FieldSet {
 	return *f
 }
 
-func (f FieldSet) Args() (fl []string, al []interface{}, ptrs []interface{}) {
+func (f FieldSet) Args() (fl []string, vals []interface{}, ptrs []interface{}) {
 	fl = make([]string, len(f.fls))
-	al = make([]interface{}, len(f.fls))
+	vals = make([]interface{}, len(f.fls))
 	ptrs = make([]interface{}, len(f.fls))
 
 	for i, v := range f.fls {
 		fl[i] = v.name
-		al[i] = v.value
+		vals[i] = v.value
 		ptrs[i] = v.ptr
 	}
 	return
@@ -151,6 +151,14 @@ func (f FieldSet) Ptrs() (ptrs []interface{}) {
 	ptrs = make([]interface{}, len(f.fls))
 	for i, v := range f.fls {
 		ptrs[i] = v.ptr
+	}
+	return
+}
+
+func (f FieldSet) Vals() (vals []interface{}) {
+	vals = make([]interface{}, len(f.fls))
+	for i, v := range f.fls {
+		vals[i] = v.value
 	}
 	return
 }
