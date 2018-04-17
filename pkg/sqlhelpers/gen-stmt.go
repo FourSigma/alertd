@@ -7,12 +7,12 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func NewStmtGenerator(efs util.FieldSet, kfs util.FieldSet) *StatementGenerator {
+func NewStmtGenerator(efs util.FieldSet, kfs util.FieldSet) *StmtGenerator {
 	fls, _, _ := efs.Args()
 	kfls, _, _ := kfs.Args()
 	table := efs.Name()
 
-	return &StatementGenerator{
+	return &StmtGenerator{
 		table:       table,
 		fls:         fls,
 		kfls:        kfls,
@@ -21,19 +21,20 @@ func NewStmtGenerator(efs util.FieldSet, kfs util.FieldSet) *StatementGenerator 
 	}
 }
 
-type StatementGenerator struct {
+type StmtGenerator struct {
 	table string
 
-	fls         []string
-	kfls        []string
-	mFn         func(string) string
-	placeHolder func(int) string
+	fls         []string            // All Fields
+	kfls        []string            // Key Fields
+	mFn         func(string) string //String modifier function (ex. CamelCase -> camel_case)
+	placeHolder func(int) string    // Database placeholders $1
 
 	cache struct {
 		insertStmt string
 		deleteStmt string
 		selectStmt string
 		getStmt    string
+		updateStmt map[string]string
 	}
 }
 
@@ -42,18 +43,17 @@ const (
 	tmplDeleteStmt = "DELETE FROM %s WHERE (%s) IN (%s)"
 	tmplGetStmt    = "SELECT * FROM %s WHERE (%s) IN (%s)"
 	tmplSelectStmt = "SELECT * FROM %s"
-	tmplUpdateStmt = "UPDATE  FROM %s WHERE (%s) IN (%s)"
 )
 
-func (g *StatementGenerator) genAttributeStmt(tmpl string) string {
+func (g *StmtGenerator) genAttributeStmt(tmpl string) string {
 	return fmt.Sprintf(tmpl, g.mFn(g.table), strings.Join(ModifyStringList(g.fls, g.mFn), ", "), g.placeHolder(len(g.fls)))
 }
 
-func (g *StatementGenerator) genKeyStmt(tmpl string) string {
+func (g *StmtGenerator) genKeyStmt(tmpl string) string {
 	return fmt.Sprintf(tmpl, g.mFn(g.table), strings.Join(ModifyStringList(g.kfls, g.mFn), ", "), g.placeHolder(len(g.kfls)))
 }
 
-func (g *StatementGenerator) InsertStmt() (stmt string) {
+func (g *StmtGenerator) InsertStmt() string {
 	if g.cache.insertStmt != "" {
 		return g.cache.insertStmt
 	}
@@ -61,7 +61,7 @@ func (g *StatementGenerator) InsertStmt() (stmt string) {
 	return g.cache.insertStmt
 }
 
-func (g *StatementGenerator) DeleteStmt() (stmt string) {
+func (g *StmtGenerator) DeleteStmt() string {
 	if g.cache.deleteStmt != "" {
 		return g.cache.deleteStmt
 	}
@@ -69,7 +69,7 @@ func (g *StatementGenerator) DeleteStmt() (stmt string) {
 	return g.cache.deleteStmt
 }
 
-func (g *StatementGenerator) GetStmt() (stmt string) {
+func (g *StmtGenerator) GetStmt() string {
 	if g.cache.getStmt != "" {
 		return g.cache.getStmt
 	}
@@ -77,14 +77,19 @@ func (g *StatementGenerator) GetStmt() (stmt string) {
 	return g.cache.getStmt
 }
 
-func (g *StatementGenerator) SelectStmt() (stmt string) {
+func (g *StmtGenerator) SelectStmt() string {
 	if g.cache.selectStmt != "" {
 		return g.cache.selectStmt
 	}
-	g.cache.selectStmt = g.genAttributeStmt(tmplSelectStmt)
+	g.cache.selectStmt = fmt.Sprintf(tmplSelectStmt, g.mFn(g.table))
 	return g.cache.selectStmt
 }
 
-func (g *StatementGenerator) UpdateStmt() (stmt string) {
-	return
+func (g *StmtGenerator) UpdateStmt(dfn []string) string {
+	hash := strings.Join(dfn, ":")
+	if val, ok := g.cache.updateStmt[hash]; ok {
+		return val
+	}
+	g.cache.updateStmt[hash] = BuildUpdateQuery(g.table, dfn, g.kfls)
+	return g.cache.updateStmt[hash]
 }

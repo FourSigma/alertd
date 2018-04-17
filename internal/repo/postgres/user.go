@@ -8,6 +8,7 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -59,7 +60,7 @@ func (u userRepo) Delete(ctx context.Context, key core.UserKey) (err error) {
 	return
 }
 
-func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.Opts) (ls []*core.User, err error) {
+func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.Opts) (ls core.UserList, err error) {
 	db, err := GetDBFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -75,12 +76,11 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 
 	case core.FilterUserKeyIn:
 		total, keyLen := len(typ.KeyList), len((core.UserKey{}).Args())
-		query = fmt.Sprintf("%s WHERE (id) IN %s", query, sqlhelpers.InQueryPlaceholder(total, keyLen))
+		query = fmt.Sprintf("%s WHERE (id) IN %s", query, sqlhelpers.PlaceholderKeyIn(total, keyLen))
 		args = make([]interface{}, total*keyLen)
 		for i, v := range typ.KeyList {
 			args[i] = v
 		}
-
 	default:
 		err = fmt.Errorf("Unknown UserFilter Type %#v", typ)
 		return
@@ -105,15 +105,15 @@ func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) 
 	}
 
 	usr.UpdatedAt = time.Now()
-	stmt := u.gen.UpdateStmt(usr.FieldSet(), dbUsr.FieldSet(), key.FieldSet())
+	dfn, targs, isEmpty := sqlhelpers.UpdateFieldSetDiff(usr.FieldSet(), dbUsr.FieldSet(), key.FieldSet())
 	if isEmpty {
 		*usr = *dbUsr
 		return
 	}
 
-	if err = db.QueryRowx(stmt, targs...).Scan(usr.FieldSet().Ptr()...); err != nil {
+	stmt := u.gen.UpdateStmt(dfn)
+	if err = db.QueryRowx(stmt, targs...).Scan(usr.FieldSet().Ptrs()...); err != nil {
 		return
 	}
-
 	return
 }

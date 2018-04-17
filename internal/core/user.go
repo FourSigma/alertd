@@ -11,13 +11,13 @@ import (
 type UserRepo interface {
 	Create(context.Context, *User) error
 	Delete(context.Context, UserKey) error
-	List(context.Context, UserFilter, ...Opts) ([]*User, error)
+	List(context.Context, UserFilter, ...Opts) (UserList, error)
 	Get(context.Context, UserKey) (*User, error)
 	Update(context.Context, UserKey, *User) error
 }
 
 type UserFilter interface {
-	UserFilter()
+	OK(*User) bool
 }
 
 type Opts interface {
@@ -38,6 +38,16 @@ func (_ Offset) Opts() {
 
 type UserList []*User
 
+func (u UserList) Filter(filt UserFilter) (rs UserList) {
+	rs = make([]*User, len(u))
+	for _, v := range u {
+		if filt.OK(v) {
+			rs = append(rs, v)
+		}
+	}
+	return
+}
+
 func (u UserList) KeyList() (kl []UserKey) {
 	kl = make([]UserKey, len(u))
 	for i, v := range u {
@@ -45,16 +55,6 @@ func (u UserList) KeyList() (kl []UserKey) {
 	}
 	return
 }
-
-type FilterUserActiveUsers struct{}
-
-func (_ FilterUserActiveUsers) UserFilter() {}
-
-type FilterUserKeyIn struct {
-	KeyList []UserKey
-}
-
-func (_ FilterUserKeyIn) UserFilter() {}
 
 type UserStateId string
 type User struct {

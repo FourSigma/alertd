@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"time"
+
+	"github.com/FourSigma/alertd/pkg/util"
 )
 
 func BuildUpdateQuery(tn string, fs []string, ks []string) string {
@@ -38,7 +39,7 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 
 }
 
-func KeyInPlaceholder(total int, keyLen int) string {
+func PlaceholderKeyIn(total int, keyLen int) string {
 	buf := &bytes.Buffer{}
 	all := total * keyLen
 	als := make([]string, all)
@@ -59,10 +60,17 @@ func KeyInPlaceholder(total int, keyLen int) string {
 	return buf.String()
 }
 
-func StringNotEqualAndNotEmpty(src string, dest string) bool {
-	return (src != dest) && (src != "")
-}
+func UpdateFieldSetDiff(mod util.FieldSet, db util.FieldSet, key util.FieldSet) (fn []string, targs []interface{}, isEmpty bool) {
+	diff := mod.Filter(util.UpdateableFields).Diff(db)
 
-func TimeNotEqualAndNotEmpty(src time.Time, dest time.Time) bool {
-	return !src.Equal(dest) && !src.IsZero()
+	if isEmpty = diff.Filter(util.RemoveUpdatedAt).IsEmpty(); isEmpty {
+		return
+	}
+
+	fn = diff.FieldNameList(nil)
+	dargs, kargs := diff.Vals(), key.Vals()
+	targs = append(dargs, kargs...)
+
+	return
+
 }
