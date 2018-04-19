@@ -18,6 +18,8 @@ func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
 	if err != nil {
 		return err
 	}
+
+	user.CreatedAt = time.Now()
 	fs := user.FieldSet()
 	fmt.Println(u.gen.InsertStmt())
 	if err = db.QueryRowxContext(ctx, u.gen.InsertStmt(), fs.Vals()...).Scan(fs.Ptrs()...); err != nil {
@@ -78,6 +80,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 		query = fmt.Sprintf("%s WHERE (id) IN %s", query, sqlhelpers.PlaceholderKeyIn(total, keyLen))
 		args = make([]interface{}, total*keyLen)
 		for i, v := range typ.KeyList {
+			//Need to refactor composite primary keys
 			args[i] = v.FieldSet().Vals()[0]
 		}
 

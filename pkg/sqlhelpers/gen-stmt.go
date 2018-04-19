@@ -17,12 +17,14 @@ func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *Stmt
 	kfls = ModifyStringList(kfls, util.CamelCaseToUnderscore)
 	table = ModifyString(table, util.CamelCaseToUnderscore)
 
-	return &StmtGenerator{
+	sg := &StmtGenerator{
 		table:       schema + "." + table,
 		fls:         fls,
 		kfls:        kfls,
 		placeHolder: PostgresPlaceholder,
 	}
+	sg.cache.updateStmt = map[string]string{}
+	return sg
 }
 
 type StmtGenerator struct {
@@ -90,6 +92,7 @@ func (g *StmtGenerator) SelectStmt() string {
 }
 
 func (g *StmtGenerator) UpdateStmt(dfn []string) string {
+	dfn = ModifyStringList(dfn, util.CamelCaseToUnderscore)
 	hash := strings.Join(dfn, ":")
 	if val, ok := g.cache.updateStmt[hash]; ok {
 		return val

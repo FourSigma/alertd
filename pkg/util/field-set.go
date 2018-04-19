@@ -200,5 +200,5 @@ func UpdateableFields(f *Field) bool {
 }
 
 func RemoveUpdatedAt(f *Field) bool {
-	return !(f.name == "updatedAt")
+	return !(f.name == "UpdatedAt")
 }

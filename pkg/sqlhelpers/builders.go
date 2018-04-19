@@ -24,7 +24,6 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 	}
 
 	fmt.Fprintf(buf, " WHERE (%s) IN (", strings.Join(ks, ", "))
-
 	for i, _ := range ks {
 		fmt.Fprintf(buf, "$%d", pnum)
 		pnum = pnum + 1
@@ -34,9 +33,7 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 	}
 
 	fmt.Fprint(buf, ") RETURNING *")
-
 	return buf.String()
-
 }
 
 func PlaceholderKeyIn(total int, keyLen int) string {
@@ -62,7 +59,6 @@ func PlaceholderKeyIn(total int, keyLen int) string {
 
 func UpdateFieldSetDiff(mod util.FieldSet, db util.FieldSet, key util.FieldSet) (fn []string, targs []interface{}, isEmpty bool) {
 	diff := mod.Filter(util.UpdateableFields).Diff(db)
-
 	if isEmpty = diff.Filter(util.RemoveUpdatedAt).IsEmpty(); isEmpty {
 		return
 	}
@@ -70,7 +66,5 @@ func UpdateFieldSetDiff(mod util.FieldSet, db util.FieldSet, key util.FieldSet) 
 	fn = diff.FieldNameList(nil)
 	dargs, kargs := diff.Vals(), key.Vals()
 	targs = append(dargs, kargs...)
-
 	return
-
 }
