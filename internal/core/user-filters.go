@@ -1,17 +1,34 @@
 package core
 
+import "errors"
+
+type UserFilter interface {
+	OK(*User) bool
+	Valid() error
+}
+
 type FilterUserAll struct{}
 
 func (_ FilterUserAll) OK(u *User) bool { return true }
+func (_ FilterUserAll) Valid() error    { return nil }
 
 type FilterUserActiveUsers struct{}
 
 func (_ FilterUserActiveUsers) OK(u *User) bool { return u.StateId == "Active" }
+func (_ FilterUserActiveUsers) Valid() error    { return nil }
 
 type FilterUserKeyIn struct {
 	KeyList []UserKey
 
 	cache map[UserKey]struct{}
+}
+
+func (f *FilterUserKeyIn) Valid() (err error) {
+	if len(f.KeyList) == 0 {
+		err = errors.New("Invalid FilterUserKeyIn -- KeyList is empty")
+		return
+	}
+	return nil
 }
 
 func (f *FilterUserKeyIn) OK(u *User) (ok bool) {

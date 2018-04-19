@@ -16,10 +16,6 @@ type UserRepo interface {
 	Update(context.Context, UserKey, *User) error
 }
 
-type UserFilter interface {
-	OK(*User) bool
-}
-
 type Opts interface {
 	Opts()
 }
@@ -36,38 +32,30 @@ func (_ Offset) Opts() {
 	return
 }
 
-type UserList []*User
-
-func (u UserList) Filter(filt UserFilter) (rs UserList) {
-	rs = make([]*User, len(u))
-	for _, v := range u {
-		if filt.OK(v) {
-			rs = append(rs, v)
-		}
+func NewUser(firstName string, lastName string, email string, password string) *User {
+	salt, hash := util.EncryptPassword(password)
+	return &User{
+		Id:           uuid.NewV4(),
+		FirstName:    firstName,
+		LastName:     lastName,
+		Email:        email,
+		PasswordSalt: salt,
+		PasswordHash: hash,
 	}
-	return
-}
-
-func (u UserList) KeyList() (kl []UserKey) {
-	kl = make([]UserKey, len(u))
-	for i, v := range u {
-		kl[i] = v.Key()
-	}
-	return
 }
 
 type UserStateId string
 type User struct {
 	Id           uuid.UUID
-	FirstName    string
-	LastName     string
-	Email        string
-	PasswordSalt string
-	PasswordHash string
-	StateId      UserStateId
+	FirstName    string      `db:"first_name"`
+	LastName     string      `db:"last_name"`
+	Email        string      `db:"email"`
+	PasswordSalt string      `db:"password_salt"`
+	PasswordHash string      `db:"password_hash"`
+	StateId      UserStateId `db:"state_id"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
 
 func (u User) Key() UserKey {
@@ -94,16 +82,34 @@ type UserKey struct {
 	Id uuid.UUID
 }
 
-func (f UserKey) Args() []interface{} {
-	return []interface{}{
-		f.Id,
-	}
-}
-
-func (u *UserKey) FieldSet() util.FieldSet {
+func (u UserKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("UserKey",
 		util.NewField("Id", u.Id, &u.Id, false),
 	)
+}
+
+func (_ UserKey) KeyLen() int {
+	return 1
+}
+
+type UserList []*User
+
+func (u UserList) Filter(filt UserFilter) (rs UserList) {
+	rs = make([]*User, len(u))
+	for _, v := range u {
+		if filt.OK(v) {
+			rs = append(rs, v)
+		}
+	}
+	return
+}
+
+func (u UserList) KeyList() (kl []UserKey) {
+	kl = make([]UserKey, len(u))
+	for i, v := range u {
+		kl[i] = v.Key()
+	}
+	return
 }
 
 //Users can only have one active key at a time.

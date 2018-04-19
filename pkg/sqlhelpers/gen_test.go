@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	"github.com/FourSigma/alertd/internal/core"
+	"github.com/FourSigma/alertd/pkg/sqlhelpers"
 )
 
 func TestGenInsertStatement(tst *testing.T) {
 
-	gen := NewStmtGenerator((&core.User{}).FieldSet(), (&core.UserKey{}).FieldSet())
+	gen := sqlhelpers.NewStmtGenerator((&core.User{}).FieldSet(), (&core.UserKey{}).FieldSet())
 	fmt.Println(gen.InsertStmt())
 	fmt.Println(gen.DeleteStmt())
 	fmt.Println(gen.GetStmt())

@@ -7,16 +7,20 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func NewStmtGenerator(efs util.FieldSet, kfs util.FieldSet) *StmtGenerator {
+func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *StmtGenerator {
 	fls, _, _ := efs.Args()
 	kfls, _, _ := kfs.Args()
 	table := efs.Name()
 
+	//Convert from CamelCase to under_score
+	fls = ModifyStringList(fls, util.CamelCaseToUnderscore)
+	kfls = ModifyStringList(kfls, util.CamelCaseToUnderscore)
+	table = ModifyString(table, util.CamelCaseToUnderscore)
+
 	return &StmtGenerator{
-		table:       table,
+		table:       schema + "." + table,
 		fls:         fls,
 		kfls:        kfls,
-		mFn:         util.CamelCaseToUnderscore,
 		placeHolder: PostgresPlaceholder,
 	}
 }
@@ -24,10 +28,9 @@ func NewStmtGenerator(efs util.FieldSet, kfs util.FieldSet) *StmtGenerator {
 type StmtGenerator struct {
 	table string
 
-	fls         []string            // All Fields
-	kfls        []string            // Key Fields
-	mFn         func(string) string //String modifier function (ex. CamelCase -> camel_case)
-	placeHolder func(int) string    // Database placeholders $1
+	fls         []string         // All Fields
+	kfls        []string         // Key Fields
+	placeHolder func(int) string // Database placeholders $1
 
 	cache struct {
 		insertStmt string
@@ -46,11 +49,12 @@ const (
 )
 
 func (g *StmtGenerator) genAttributeStmt(tmpl string) string {
-	return fmt.Sprintf(tmpl, g.mFn(g.table), strings.Join(ModifyStringList(g.fls, g.mFn), ", "), g.placeHolder(len(g.fls)))
+	//Original revert back
+	return fmt.Sprintf(tmpl, g.table, strings.Join(g.fls, ", "), g.placeHolder(len(g.fls)))
 }
 
 func (g *StmtGenerator) genKeyStmt(tmpl string) string {
-	return fmt.Sprintf(tmpl, g.mFn(g.table), strings.Join(ModifyStringList(g.kfls, g.mFn), ", "), g.placeHolder(len(g.kfls)))
+	return fmt.Sprintf(tmpl, g.table, strings.Join(g.kfls, ", "), g.placeHolder(len(g.kfls)))
 }
 
 func (g *StmtGenerator) InsertStmt() string {
@@ -81,7 +85,7 @@ func (g *StmtGenerator) SelectStmt() string {
 	if g.cache.selectStmt != "" {
 		return g.cache.selectStmt
 	}
-	g.cache.selectStmt = fmt.Sprintf(tmplSelectStmt, g.mFn(g.table))
+	g.cache.selectStmt = fmt.Sprintf(tmplSelectStmt, g.table)
 	return g.cache.selectStmt
 }
 
