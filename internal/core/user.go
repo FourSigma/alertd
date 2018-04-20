@@ -16,22 +16,6 @@ type UserRepo interface {
 	Update(context.Context, UserKey, *User) error
 }
 
-type Opts interface {
-	Opts()
-}
-
-type Limit uint
-
-func (_ Limit) Opts() {
-	return
-}
-
-type Offset uint
-
-func (_ Offset) Opts() {
-	return
-}
-
 func NewUser(firstName string, lastName string, email string, password string) *User {
 	salt, hash := util.EncryptPassword(password)
 	return &User{
@@ -53,9 +37,11 @@ type User struct {
 	PasswordSalt string      `db:"password_salt"`
 	PasswordHash string      `db:"password_hash"`
 	StateId      UserStateId `db:"state_id"`
+	CreatedAt    time.Time   `db:"created_at"`
+	UpdatedAt    time.Time   `db:"updated_at"`
 
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	TopicList TopicList
+	TokenList TokenList
 }
 
 func (u User) Key() UserKey {
@@ -88,11 +74,38 @@ func (u UserKey) FieldSet() util.FieldSet {
 	)
 }
 
-func (_ UserKey) KeyLen() int {
-	return 1
+type UserList []*User
+
+func (u UserList) Map() (m map[UserKey]*User) {
+	m = map[UserKey]*User{}
+	for _, v := range u {
+		m[v.Key()] = v
+	}
+	return
 }
 
-type UserList []*User
+func (u UserList) Reslove(tl TopicList, utl TokenList) {
+	m := u.Map()
+	for _, v := range tl {
+		if usr, ok := m[v.UserKey()]; ok {
+			usr.TopicList = append(usr.TopicList, v)
+		}
+	}
+
+	for _, v := range utl {
+		if usr, ok := m[v.UserKey()]; ok {
+			usr.TokenList = append(usr.TokenList, v)
+		}
+	}
+	return
+}
+
+func (u UserList) Update(fn func(*User)) (rs UserList) {
+	for _, v := range u {
+		fn(v)
+	}
+	return
+}
 
 func (u UserList) Filter(filt UserFilter) (rs UserList) {
 	rs = make([]*User, len(u))
@@ -110,43 +123,4 @@ func (u UserList) KeyList() (kl []UserKey) {
 		kl[i] = v.Key()
 	}
 	return
-}
-
-//Users can only have one active key at a time.
-//Tokens are unique
-type UserTokenStateId string
-type UserToken struct {
-	UserId    uuid.UUID
-	Token     string
-	StateId   UserTokenStateId
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-type UserTokenKey struct {
-	UserId uuid.UUID
-	Token  string
-}
-
-//Users can have many topics.
-//Topic Key is UserId and Name
-type Topic struct {
-	Id        uuid.UUID
-	UserId    uuid.UUID
-	Name      string //unique
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-type TopicKey struct {
-	Id uuid.UUID
-}
-
-type MessageTypeId string
-type TopicMessage struct {
-	TopicId   uuid.UUID
-	TypeId    MessageTypeId
-	Msg       string
-	CreatedAt time.Time
-	UpdatedAt time.Time
 }

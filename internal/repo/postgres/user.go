@@ -80,7 +80,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 		query = fmt.Sprintf("%s WHERE (id) IN %s", query, sqlhelpers.PlaceholderKeyIn(total, keyLen))
 		args = make([]interface{}, total*keyLen)
 		for i, v := range typ.KeyList {
-			//Need to refactor composite primary keys
+			//Need to refactor composite primary keys (more than one key)
 			args[i] = v.FieldSet().Vals()[0]
 		}
 
