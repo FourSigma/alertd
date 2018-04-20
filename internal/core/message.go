@@ -28,8 +28,20 @@ type Message struct {
 
 func (u Message) Key() MessageKey {
 	return MessageKey{
-		Id: u.Id,
+		Id:      u.Id,
+		TopicId: u.TopicId,
 	}
+}
+
+func (u *Message) FieldSet() util.FieldSet {
+	return util.NewFieldSet("Message",
+		util.NewField("Id", u.Id, &u.Id, false),
+		util.NewField("TopicId", u.TopicId, &u.TopicId, true),
+		util.NewField("Msg", u.Msg, &u.Msg, true),
+		util.NewField("TypeId", u.TypeId, &u.TypeId, true),
+		util.NewField("CreatedAt", u.CreatedAt, &u.CreatedAt, false),
+		util.NewField("UpdatedAt", u.UpdatedAt, &u.UpdatedAt, true),
+	)
 }
 
 func (u Message) TopicKey() TopicKey {
@@ -39,7 +51,8 @@ func (u Message) TopicKey() TopicKey {
 }
 
 type MessageKey struct {
-	Id uuid.UUID
+	Id      uuid.UUID
+	TopicId uuid.UUID
 }
 
 func (u MessageKey) FieldSet() util.FieldSet {

@@ -1,7 +1,8 @@
 DROP SCHEMA IF EXISTS alertd;
 CREATE SCHEMA alertd;
 CREATE TYPE user_state_id AS ENUM
-('Active','EmailVerified', 'Suspended', 'Flagged');
+('Active','EmailVerificationSent', 'PasswordResetRequested', 'Suspended', 'Flagged');
+
 CREATE TABLE alertd.users
 (
     id uuid PRIMARY KEY,

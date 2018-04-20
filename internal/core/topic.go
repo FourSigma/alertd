@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/FourSigma/alertd/pkg/util"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -25,6 +26,16 @@ type Topic struct {
 	UpdatedAt time.Time
 
 	User *User
+}
+
+func (u *Topic) FieldSet() util.FieldSet {
+	return util.NewFieldSet("Topic",
+		util.NewField("Id", u.Id, &u.Id, false),
+		util.NewField("UserId", u.UserId, &u.UserId, false),
+		util.NewField("Name", u.Name, &u.Name, true),
+		util.NewField("CreatedAt", u.CreatedAt, &u.CreatedAt, false),
+		util.NewField("UpdatedAt", u.UpdatedAt, &u.UpdatedAt, true),
+	)
 }
 
 func (t Topic) Key() TopicKey {

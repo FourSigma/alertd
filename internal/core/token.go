@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/FourSigma/alertd/pkg/util"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -26,6 +27,16 @@ type Token struct {
 	UpdatedAt time.Time
 
 	User *User
+}
+
+func (u *Token) FieldSet() util.FieldSet {
+	return util.NewFieldSet("Token",
+		util.NewField("UserId", u.UserId, &u.UserId, false),
+		util.NewField("Token", u.Token, &u.Token, true),
+		util.NewField("StateId", u.StateId, &u.StateId, true),
+		util.NewField("CreatedAt", u.CreatedAt, &u.CreatedAt, false),
+		util.NewField("UpdatedAt", u.UpdatedAt, &u.UpdatedAt, true),
+	)
 }
 
 func (u Token) Key() TokenKey {
