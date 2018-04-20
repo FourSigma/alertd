@@ -97,6 +97,7 @@ func (g *StmtGenerator) UpdateStmt(dfn []string) string {
 	if val, ok := g.cache.updateStmt[hash]; ok {
 		return val
 	}
+	//TODO(siva) This can lead to race. Might need RWMuxtex to protect
 	g.cache.updateStmt[hash] = BuildUpdateQuery(g.table, dfn, g.kfls)
 	return g.cache.updateStmt[hash]
 }

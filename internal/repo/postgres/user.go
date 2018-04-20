@@ -14,56 +14,25 @@ type userRepo struct {
 }
 
 func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
-	db, err := GetDBFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
 	user.CreatedAt = time.Now()
-	fs := user.FieldSet()
-	fmt.Println(u.gen.InsertStmt())
-	if err = db.QueryRowxContext(ctx, u.gen.InsertStmt(), fs.Vals()...).Scan(fs.Ptrs()...); err != nil {
-		return
-	}
-	return
+	return sqlhelpers.Insert(ctx, u.gen, user.FieldSet())
 }
 
 func (u userRepo) Get(ctx context.Context, key core.UserKey) (usr *core.User, err error) {
-	db, err := GetDBFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	fs := key.FieldSet()
 	usr = &core.User{}
-	fmt.Println(u.gen.GetStmt(), fs.Vals())
-	if err = db.QueryRowxContext(ctx, u.gen.GetStmt(), fs.Vals()...).Scan(usr.FieldSet().Ptrs()...); err != nil {
+	if err = sqlhelpers.Get(ctx, u.gen, key.FieldSet(), usr.FieldSet()); err != nil {
 		return
 	}
 	return
 }
 
 func (u userRepo) Delete(ctx context.Context, key core.UserKey) (err error) {
-	db, err := GetDBFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	fs := key.FieldSet()
-	fmt.Println(u.gen.DeleteStmt())
-	if _, err = db.ExecContext(ctx, u.gen.DeleteStmt(), fs.Vals()...); err != nil {
-		return
-	}
-	return
+	return sqlhelpers.Delete(ctx, u.gen, key.FieldSet())
 }
 
 func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.Opts) (ls core.UserList, err error) {
 	if err = filt.Valid(); err != nil {
 		return
-	}
-
-	db, err := GetDBFromContext(ctx)
-	if err != nil {
-		return nil, err
 	}
 
 	var args []interface{}
@@ -89,20 +58,12 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 		return
 	}
 
-	fmt.Println(query)
-	if err = db.SelectContext(ctx, &ls, query, args...); err != nil {
+	if err = sqlhelpers.Select(ctx, &ls, query, args...); err != nil {
 		return
 	}
-
 	return
 }
-
 func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) (err error) {
-	db, err := GetDBFromContext(ctx)
-	if err != nil {
-		return
-	}
-
 	//Get from database
 	dbUsr, err := u.Get(ctx, key)
 	if err != nil {
@@ -111,17 +72,14 @@ func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) 
 
 	usr.UpdatedAt = time.Now()
 
-	mFS, dbFS, kFS := usr.FieldSet(), dbUsr.FieldSet(), key.FieldSet()
-	dfn, targs, isEmpty := sqlhelpers.UpdateFieldSetDiff(mFS, dbFS, kFS)
+	isEmpty, err := sqlhelpers.Update(ctx, u.gen, key.FieldSet(), dbUsr.FieldSet(), usr.FieldSet())
+	if err != nil {
+		return
+	}
 	if isEmpty {
 		*usr = *dbUsr
 		return
 	}
 
-	stmt := u.gen.UpdateStmt(dfn)
-	fmt.Println(stmt)
-	if err = db.QueryRowx(stmt, targs...).Scan(mFS.Ptrs()...); err != nil {
-		return
-	}
 	return
 }
