@@ -64,10 +64,12 @@ func (u TopicList) Map() (m map[TopicKey]*Topic) {
 	return
 }
 
-func (u TopicList) ResloveTopic() (m map[TopicKey]*Topic) {
-	m = map[TopicKey]*Topic{}
+func (u TopicList) Reslove(ul UserList) {
+	m := ul.Map()
 	for _, v := range u {
-		m[v.Key()] = v
+		if usr, ok := m[v.UserKey()]; ok {
+			v.User = usr
+		}
 	}
 	return
 }

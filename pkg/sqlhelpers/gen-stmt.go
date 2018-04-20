@@ -18,7 +18,7 @@ func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *Stmt
 	table = ModifyString(table, util.CamelCaseToUnderscore)
 
 	sg := &StmtGenerator{
-		table:       schema + "." + table,
+		table:       schema + "." + table + "s",
 		fls:         fls,
 		kfls:        kfls,
 		placeHolder: PostgresPlaceholder,
