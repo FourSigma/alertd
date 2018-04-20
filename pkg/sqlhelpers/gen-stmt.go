@@ -23,7 +23,6 @@ func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *Stmt
 		kfls:        kfls,
 		placeHolder: PostgresPlaceholder,
 	}
-	sg.cache.updateStmt = map[string]string{}
 	return sg
 }
 
@@ -34,13 +33,6 @@ type StmtGenerator struct {
 	kfls        []string         // Key Fields
 	placeHolder func(int) string // Database placeholders $1
 
-	cache struct {
-		insertStmt string
-		deleteStmt string
-		selectStmt string
-		getStmt    string
-		updateStmt map[string]string
-	}
 }
 
 const (
@@ -60,44 +52,22 @@ func (g *StmtGenerator) genKeyStmt(tmpl string) string {
 }
 
 func (g *StmtGenerator) InsertStmt() string {
-	if g.cache.insertStmt != "" {
-		return g.cache.insertStmt
-	}
-	g.cache.insertStmt = g.genAttributeStmt(tmplInsertStmt)
-	return g.cache.insertStmt
+	return g.genAttributeStmt(tmplInsertStmt)
 }
 
 func (g *StmtGenerator) DeleteStmt() string {
-	if g.cache.deleteStmt != "" {
-		return g.cache.deleteStmt
-	}
-	g.cache.deleteStmt = g.genKeyStmt(tmplDeleteStmt)
-	return g.cache.deleteStmt
+	return g.genKeyStmt(tmplDeleteStmt)
 }
 
 func (g *StmtGenerator) GetStmt() string {
-	if g.cache.getStmt != "" {
-		return g.cache.getStmt
-	}
-	g.cache.getStmt = g.genKeyStmt(tmplGetStmt)
-	return g.cache.getStmt
+	return g.genKeyStmt(tmplGetStmt)
 }
 
 func (g *StmtGenerator) SelectStmt() string {
-	if g.cache.selectStmt != "" {
-		return g.cache.selectStmt
-	}
-	g.cache.selectStmt = fmt.Sprintf(tmplSelectStmt, g.table)
-	return g.cache.selectStmt
+	return fmt.Sprintf(tmplSelectStmt, g.table)
 }
 
 func (g *StmtGenerator) UpdateStmt(dfn []string) string {
 	dfn = ModifyStringList(dfn, util.CamelCaseToUnderscore)
-	hash := strings.Join(dfn, ":")
-	if val, ok := g.cache.updateStmt[hash]; ok {
-		return val
-	}
-	//TODO(siva) This can lead to race. Might need RWMuxtex to protect
-	g.cache.updateStmt[hash] = BuildUpdateQuery(g.table, dfn, g.kfls)
-	return g.cache.updateStmt[hash]
+	return BuildUpdateQuery(g.table, dfn, g.kfls)
 }
