@@ -58,6 +58,7 @@ type MessageKey struct {
 func (u MessageKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("MessageKey",
 		util.NewField("Id", u.Id, &u.Id, false),
+		util.NewField("TopicId", u.TopicId, &u.TopicId, true),
 	)
 }
 
