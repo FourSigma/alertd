@@ -9,17 +9,15 @@ import (
 	"github.com/FourSigma/alertd/internal/service"
 	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
 	"github.com/go-chi/chi"
-	uuid "github.com/satori/go.uuid"
 )
 
 func TokenCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tkId := chi.URLParam(r, "tokenId")
 		usrKey := r.Context().Value(CtxUserId).(core.UserKey)
 
-		tokenId, err := uuid.FromString(tkId)
-		if err != nil {
-			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTokenId, err)
+		tokenId := chi.URLParam(r, "tokenId")
+		if tokenId == "" {
+			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTokenId, nil)
 			return
 		}
 		ctx := context.WithValue(r.Context(), CtxTokenId, core.TokenKey{Token: tokenId, UserId: usrKey.Id})

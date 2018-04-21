@@ -25,10 +25,11 @@ func UserCtx(next http.Handler) http.Handler {
 	})
 }
 
-func (u UserResource) Routes(r chi.Router) chi.Router {
-	r.Route("/users", func(r chi.Router) {
+func init() {
+	rootRoute.Route("/users", func(r chi.Router) {
+		u := GetResourceManager().User
 		r.Post("/", u.Create)
-		r.With(utilhttp.ParseQuery).Get("/", u.user.Index)
+		r.With(utilhttp.ParseQuery).Get("/", u.Index)
 
 		r.Route("/{userId}", func(r chi.Router) {
 			r.Use(UserCtx)
@@ -37,17 +38,17 @@ func (u UserResource) Routes(r chi.Router) chi.Router {
 			r.Delete("/", u.Delete)
 
 			r.Route("/tokens", func(r chi.Router) {
-				r.Post("/", u.Create)
+				tkn := GetResourceManager().Token
+				r.Post("/", tkn.Create)
 				r.Route("/{tokenId}", func(r chi.Router) {
 					r.Use(TokenCtx)
-					r.Get("/", u.tokenRes.Get)
-					r.Put("/", u.tokenRes.Update)
-					r.Delete("/", u.tokenRes.Delete)
+					r.Get("/", tkn.Get)
+					r.Put("/", tkn.Update)
+					r.Delete("/", tkn.Delete)
 				})
 			})
 		})
 	})
-	return r
 }
 
 type UserResource struct {

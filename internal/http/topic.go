@@ -1,3 +1,5 @@
+package http
+
 import (
 	"context"
 	"encoding/json"
@@ -5,18 +7,19 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/internal/service"
+	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
 	"github.com/go-chi/chi"
 	uuid "github.com/satori/go.uuid"
 )
 
 func init() {
-	rootRoute.Route("/tokens", func(r chi.Router) {
-		tkn := TokenResource{}
+	rootRoute.Route("/topics", func(r chi.Router) {
+		tkn := TopicResource{}
 		r.Post("/", tkn.Create)
 		r.With(utilhttp.ParseQuery).Get("/", tkn.Index)
 
-		r.Route("/{tokenId}", func(r chi.Router) {
-			r.Use(TokenCtx)
+		r.Route("/{topicId}", func(r chi.Router) {
+			r.Use(TopicCtx)
 			r.Get("/", tkn.Get)
 			r.Put("/", tkn.Update)
 			r.Delete("/", tkn.Delete)
@@ -24,34 +27,34 @@ func init() {
 	})
 }
 
-func TokenCtx(next http.Handler) http.Handler {
+func TopicCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		strId := chi.URLParam(r, "tokenId")
-		tokenId, err := uuid.FromString(strId)
+		strId := chi.URLParam(r, "topicId")
+		topicId, err := uuid.FromString(strId)
 		if err != nil {
-			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTokenId, err)
+			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTopicId, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), CtxTokenId, core.TokenKey{Id: tokenId})
+		ctx := context.WithValue(r.Context(), CtxTopicId, core.TopicKey{Id: topicId})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-type TokenResource struct {
-	token *service.TokenService
+type TopicResource struct {
+	topic *service.TopicService
 }
 
-func (u TokenResource) Create(rw http.ResponseWriter, r *http.Request) {
+func (u TopicResource) Create(rw http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
-	req := &service.TokenCreateRequest{}
+	req := &service.TopicCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
 	}
-	resp, err := u.token.Create(r.Context(), req)
+	resp, err := u.topic.Create(r.Context(), req)
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorCreatingResource, err)
 		return
@@ -59,9 +62,9 @@ func (u TokenResource) Create(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusCreated, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u TokenResource) Get(rw http.ResponseWriter, r *http.Request) {
-	key := r.Context().Value(CtxTokenId).(core.TokenKey)
-	resp, err := u.token.Get(r.Context(), &service.TokenGetRequest{Key: key})
+func (u TopicResource) Get(rw http.ResponseWriter, r *http.Request) {
+	key := r.Context().Value(CtxTopicId).(core.TopicKey)
+	resp, err := u.topic.Get(r.Context(), &service.TopicGetRequest{Key: key})
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorGetResource, err)
 		return
@@ -69,9 +72,9 @@ func (u TokenResource) Get(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u TokenResource) Delete(rw http.ResponseWriter, r *http.Request) {
-	key := r.Context().Value(CtxTokenId).(core.TokenKey)
-	resp, err := u.token.Delete(r.Context(), &service.TokenDeleteRequest{Key: key})
+func (u TopicResource) Delete(rw http.ResponseWriter, r *http.Request) {
+	key := r.Context().Value(CtxTopicId).(core.TopicKey)
+	resp, err := u.topic.Delete(r.Context(), &service.TopicDeleteRequest{Key: key})
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorDeletingResource, err)
 		return
@@ -79,20 +82,20 @@ func (u TokenResource) Delete(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Key})
 }
 
-func (u TokenResource) Update(rw http.ResponseWriter, r *http.Request) {
+func (u TopicResource) Update(rw http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
 
-	key := r.Context().Value(CtxTokenId).(core.TokenKey)
-	req := &service.TokenUpdateRequest{Key: key}
+	key := r.Context().Value(CtxTopicId).(core.TopicKey)
+	req := &service.TopicUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
 	}
 
-	resp, err := u.token.Update(r.Context(), req)
+	resp, err := u.topic.Update(r.Context(), req)
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorUpdatingResource, err)
 		return
@@ -100,5 +103,5 @@ func (u TokenResource) Update(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u TokenResource) Index(rw http.ResponseWriter, r *http.Request) {
+func (u TopicResource) Index(rw http.ResponseWriter, r *http.Request) {
 }
