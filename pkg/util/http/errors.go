@@ -14,6 +14,7 @@ const (
 	ErrorEmptyBody           errMsg = "[HTTP] empty message body"
 	ErrorDecodingPathUserId  errMsg = "[URLPath] error decoding userId path"
 	ErrorDecodingPathTokenId errMsg = "[URLPath] error decoding tokenId path"
+	ErrorDecodingPathTopicId errMsg = "[URLPath] error decoding topicId path"
 	ErrorCreatingResource    errMsg = "[Resource] error creating resource"
 	ErrorDeletingResource    errMsg = "[Resource] error deleting resource"
 	ErrorUpdatingResource    errMsg = "[Resource] error updating resource"
@@ -27,6 +28,7 @@ var errCodeMap = map[errMsg]int{
 	ErrorEmptyBody:           http.StatusBadRequest,
 	ErrorDecodingPathTokenId: http.StatusBadRequest,
 	ErrorDecodingPathUserId:  http.StatusBadRequest,
+	ErrorDecodingPathTopicId: http.StatusBadRequest,
 	ErrorCreatingResource:    http.StatusInternalServerError,
 	ErrorDeletingResource:    http.StatusInternalServerError,
 	ErrorUpdatingResource:    http.StatusInternalServerError,

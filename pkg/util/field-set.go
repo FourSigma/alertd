@@ -27,6 +27,10 @@ func NewField(name string, value interface{}, ptr interface{}, canUpdate bool) F
 	}
 }
 
+type FieldSetter interface {
+	FieldSet() FieldSet
+}
+
 type Field struct {
 	name      string
 	value     interface{}

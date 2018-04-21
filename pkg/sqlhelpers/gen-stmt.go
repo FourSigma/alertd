@@ -8,10 +8,10 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *StmtGenerator {
-	fls, _, _ := efs.Args()
-	kfls, _, _ := kfs.Args()
-	table := efs.Name()
+func NewStmtGenerator(schema string, efs util.FieldSetter, kfs util.FieldSetter) *StmtGenerator {
+	fls, _, _ := efs.FieldSet().Args()
+	kfls, _, _ := kfs.FieldSet().Args()
+	table := efs.FieldSet().Name()
 
 	//Convert from CamelCase to under_score
 	fls = ModifyStringList(fls, util.CamelCaseToUnderscore)
