@@ -12,21 +12,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func init() {
-	rootRoute.Route("/users", func(r chi.Router) {
-		usr := UserResource{}
-		r.Post("/", usr.Create)
-		r.With(utilhttp.ParseQuery).Get("/", usr.Index)
-
-		r.Route("/{userId}", func(r chi.Router) {
-			r.Use(UserCtx)
-			r.Get("/", usr.Get)
-			r.Put("/", usr.Update)
-			r.Delete("/", usr.Delete)
-		})
-	})
-}
-
 func UserCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		strId := chi.URLParam(r, "userId")
@@ -40,8 +25,34 @@ func UserCtx(next http.Handler) http.Handler {
 	})
 }
 
+func (u UserResource) Routes(r chi.Router) chi.Router {
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", u.Create)
+		r.With(utilhttp.ParseQuery).Get("/", u.user.Index)
+
+		r.Route("/{userId}", func(r chi.Router) {
+			r.Use(UserCtx)
+			r.Get("/", u.Get)
+			r.Put("/", u.Update)
+			r.Delete("/", u.Delete)
+
+			r.Route("/tokens", func(r chi.Router) {
+				r.Post("/", u.Create)
+				r.Route("/{tokenId}", func(r chi.Router) {
+					r.Use(TokenCtx)
+					r.Get("/", u.tokenRes.Get)
+					r.Put("/", u.tokenRes.Update)
+					r.Delete("/", u.tokenRes.Delete)
+				})
+			})
+		})
+	})
+	return r
+}
+
 type UserResource struct {
-	user *service.UserService
+	user     *service.UserService
+	tokenRes *TokenResource
 }
 
 func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {

@@ -1,5 +1,3 @@
-package http
-
 import (
 	"context"
 	"encoding/json"
@@ -7,22 +5,34 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/internal/service"
-	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
 	"github.com/go-chi/chi"
 	uuid "github.com/satori/go.uuid"
 )
 
+func init() {
+	rootRoute.Route("/tokens", func(r chi.Router) {
+		tkn := TokenResource{}
+		r.Post("/", tkn.Create)
+		r.With(utilhttp.ParseQuery).Get("/", tkn.Index)
+
+		r.Route("/{tokenId}", func(r chi.Router) {
+			r.Use(TokenCtx)
+			r.Get("/", tkn.Get)
+			r.Put("/", tkn.Update)
+			r.Delete("/", tkn.Delete)
+		})
+	})
+}
+
 func TokenCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tkId := chi.URLParam(r, "tokenId")
-		usrKey := r.Context().Value(CtxUserId).(core.UserKey)
-
-		tokenId, err := uuid.FromString(tkId)
+		strId := chi.URLParam(r, "tokenId")
+		tokenId, err := uuid.FromString(strId)
 		if err != nil {
 			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTokenId, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), CtxTokenId, core.TokenKey{Token: tokenId, UserId: usrKey.Id})
+		ctx := context.WithValue(r.Context(), CtxTokenId, core.TokenKey{Id: tokenId})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -36,9 +46,7 @@ func (u TokenResource) Create(rw http.ResponseWriter, r *http.Request) {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
-	usrKey := r.Context().Value(CtxUserId).(core.UserKey)
-
-	req := &service.TokenCreateRequest{Data: &core.Token{UserId: usrKey.Id}}
+	req := &service.TokenCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
@@ -76,6 +84,7 @@ func (u TokenResource) Update(rw http.ResponseWriter, r *http.Request) {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
+
 	key := r.Context().Value(CtxTokenId).(core.TokenKey)
 	req := &service.TokenUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
