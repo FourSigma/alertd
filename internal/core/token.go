@@ -57,6 +57,13 @@ type TokenKey struct {
 	Token  string
 }
 
+func (u TokenKey) FieldSet() util.FieldSet {
+	return util.NewFieldSet("TokenKey",
+		util.NewField("UserId", u.UserId, &u.UserId, false),
+		util.NewField("Token", u.Token, &u.Token, true),
+	)
+}
+
 type TokenList []*Token
 
 func (u TokenList) Map() (m map[TokenKey]*Token) {

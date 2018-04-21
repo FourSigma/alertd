@@ -12,10 +12,12 @@ type FilterUserAll struct{}
 func (_ FilterUserAll) OK(u *User) bool { return true }
 func (_ FilterUserAll) Valid() error    { return nil }
 
-type FilterUserActiveUsers struct{}
+type FilterUserByStateId struct {
+	StateId UserStateId
+}
 
-func (_ FilterUserActiveUsers) OK(u *User) bool { return u.StateId == "Active" }
-func (_ FilterUserActiveUsers) Valid() error    { return nil }
+func (_ FilterUserByStateId) OK(u *User) bool { return u.StateId == u.StateId }
+func (_ FilterUserByStateId) Valid() error    { return nil }
 
 type FilterUserKeyIn struct {
 	KeyList []UserKey

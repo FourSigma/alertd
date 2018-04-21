@@ -54,6 +54,12 @@ type TopicKey struct {
 	Id uuid.UUID
 }
 
+func (u TopicKey) FieldSet() util.FieldSet {
+	return util.NewFieldSet("Topic",
+		util.NewField("Id", u.Id, &u.Id, false),
+	)
+}
+
 type TopicList []*Topic
 
 func (u TopicList) Map() (m map[TopicKey]*Topic) {
