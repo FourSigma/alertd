@@ -7,6 +7,7 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
+	_ "github.com/lib/pq"
 )
 
 type userRepo struct {
