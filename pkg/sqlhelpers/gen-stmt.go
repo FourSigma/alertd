@@ -1,6 +1,7 @@
 package sqlhelpers
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -27,8 +28,7 @@ func NewStmtGenerator(schema string, efs util.FieldSet, kfs util.FieldSet) *Stmt
 }
 
 type StmtGenerator struct {
-	table string
-
+	table       string           //Table name
 	fls         []string         // All Fields
 	kfls        []string         // Key Fields
 	placeHolder func(int) string // Database placeholders $1
@@ -42,32 +42,37 @@ const (
 	tmplSelectStmt = "SELECT * FROM %s"
 )
 
-func (g *StmtGenerator) genAttributeStmt(tmpl string) string {
-	//Original revert back
-	return fmt.Sprintf(tmpl, g.table, strings.Join(g.fls, ", "), g.placeHolder(len(g.fls)))
+func (g *StmtGenerator) genAttributeStmt(tmpl string) *bytes.Buffer {
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, tmpl, g.table, strings.Join(g.fls, ", "), g.placeHolder(len(g.fls)))
+	return buf
 }
 
-func (g *StmtGenerator) genKeyStmt(tmpl string) string {
-	return fmt.Sprintf(tmpl, g.table, strings.Join(g.kfls, ", "), g.placeHolder(len(g.kfls)))
+func (g *StmtGenerator) genKeyStmt(tmpl string) *bytes.Buffer {
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, tmpl, g.table, strings.Join(g.kfls, ", "), g.placeHolder(len(g.kfls)))
+	return buf
 }
 
 func (g *StmtGenerator) InsertStmt() string {
-	return g.genAttributeStmt(tmplInsertStmt)
+	return g.genAttributeStmt(tmplInsertStmt).String()
 }
 
 func (g *StmtGenerator) DeleteStmt() string {
-	return g.genKeyStmt(tmplDeleteStmt)
+	return g.genKeyStmt(tmplDeleteStmt).String()
 }
 
 func (g *StmtGenerator) GetStmt() string {
-	return g.genKeyStmt(tmplGetStmt)
+	return g.genKeyStmt(tmplGetStmt).String()
 }
 
-func (g *StmtGenerator) SelectStmt() string {
-	return fmt.Sprintf(tmplSelectStmt, g.table)
+func (g *StmtGenerator) SelectStmt() *bytes.Buffer {
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, tmplSelectStmt, g.table)
+	return buf
 }
 
 func (g *StmtGenerator) UpdateStmt(dfn []string) string {
 	dfn = ModifyStringList(dfn, util.CamelCaseToUnderscore)
-	return BuildUpdateQuery(g.table, dfn, g.kfls)
+	return BuildUpdateQuery(g.table, dfn, g.kfls).String()
 }

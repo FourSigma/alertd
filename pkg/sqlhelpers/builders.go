@@ -8,7 +8,7 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func BuildUpdateQuery(tn string, fs []string, ks []string) string {
+func BuildUpdateQuery(tn string, fs []string, ks []string) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	fmt.Fprintf(buf, "UPDATE %s SET ", tn)
 
@@ -33,7 +33,7 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) string {
 	}
 
 	fmt.Fprint(buf, ") RETURNING *")
-	return buf.String()
+	return buf
 }
 
 func PlaceholderKeyIn(total int, keyLen int) string {
