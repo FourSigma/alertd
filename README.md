@@ -1,6 +1,6 @@
 # Alertd
 
-**Alterd** is a simple message aggreation server. Clients send messages to the server via http requests.  
+*Alterd* is a simple message aggreation server. Clients send messages to the server via http requests.  
 
 ## Getting Started
 
