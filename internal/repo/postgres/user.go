@@ -40,23 +40,20 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 	qbuf := u.gen.SelectStmt()
 
 	switch typ := filt.(type) {
+
 	case core.FilterUserAll:
+
 	case core.FilterUserByStateId:
 		fmt.Fprintf(qbuf, " WHERE state_id = '%s'", string(typ.StateId))
 
 	case *core.FilterUserKeyIn:
-		total, keyLen := len(typ.KeyList), len((core.UserKey{}).FieldSet().Vals())
+		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.gen.KeyLen()
 		args = make([]interface{}, total*keyLen)
 
-		for i, s, kls := 0, typ.KeyList[:keyLen], typ.KeyList[keyLen:]; ; i, s, kls = i+1, kls[:keyLen], kls[keyLen:] {
-			for j, u := range s {
-				args[i] = u.FieldSet().Vals()[j]
-			}
-			if len(kls) == 0 {
-				break
-			}
+		for i, j := 0, 0; i < len(kls); i, j = i+1, j+keyLen {
+			k := kls[i].FieldSet().Vals()
+			args[j] = k[0]
 		}
-
 		fmt.Fprintf(qbuf, " WHERE (id) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
 
 	default:

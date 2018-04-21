@@ -44,14 +44,36 @@ const (
 
 func (g *StmtGenerator) genAttributeStmt(tmpl string) *bytes.Buffer {
 	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmpl, g.table, strings.Join(g.fls, ", "), g.placeHolder(len(g.fls)))
+	fmt.Fprintf(buf, tmpl, g.table, g.JoinedAttributeFields(), g.placeHolder(g.AttributeLen()))
 	return buf
 }
 
 func (g *StmtGenerator) genKeyStmt(tmpl string) *bytes.Buffer {
 	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmpl, g.table, strings.Join(g.kfls, ", "), g.placeHolder(len(g.kfls)))
+	fmt.Fprintf(buf, tmpl, g.table, g.JoinedKeyFields(), g.placeHolder(g.KeyLen()))
 	return buf
+}
+
+func (g *StmtGenerator) KeyLen() int {
+	return len(g.kfls)
+}
+func (g *StmtGenerator) AttributeLen() int {
+	return len(g.fls)
+}
+func (g *StmtGenerator) KeyFieldNames() []string {
+	return g.kfls
+}
+
+func (g *StmtGenerator) AttributeFieldNames() []string {
+	return g.fls
+}
+
+func (g *StmtGenerator) JoinedKeyFields() string {
+	return strings.Join(g.KeyFieldNames(), ", ")
+}
+
+func (g *StmtGenerator) JoinedAttributeFields() string {
+	return strings.Join(g.AttributeFieldNames(), ", ")
 }
 
 func (g *StmtGenerator) InsertStmt() string {

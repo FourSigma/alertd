@@ -43,3 +43,28 @@ func (f *FilterTokenKeyIn) OK(u *Token) (ok bool) {
 	_, ok = f.cache[u.Key()]
 	return
 }
+
+type FilterTokenUserKeyIn struct {
+	KeyList []UserKey
+
+	cache map[UserKey]struct{}
+}
+
+func (f *FilterTokenUserKeyIn) Valid() (err error) {
+	if len(f.KeyList) == 0 {
+		err = errors.New("Invalid FilterTokenUserKeyIn -- KeyList is empty")
+		return
+	}
+	return nil
+}
+
+func (f *FilterTokenUserKeyIn) OK(u *Token) (ok bool) {
+	if f.cache != nil {
+		f.cache = map[UserKey]struct{}{}
+		for _, v := range f.KeyList {
+			f.cache[v] = struct{}{}
+		}
+	}
+	_, ok = f.cache[u.UserKey()]
+	return
+}
