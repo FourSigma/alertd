@@ -20,7 +20,7 @@ func TestInsert(tst *testing.T) {
 		tst.Error("Error connecting to database: ", err)
 		return
 	}
-	ctx := context.WithValue(context.Background(), CtxDbKey, db)
+	ctx := context.WithValue(context.Background(), sqlhelpers.CtxDbKey, db)
 	u := core.NewUser("TestFirstName", "TestLastName", "test@email.com", "TestPassword")
 	u.PasswordHash = "TestHash"
 	u.PasswordSalt = "TestSalt"

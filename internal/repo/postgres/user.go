@@ -36,29 +36,34 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 	}
 
 	var args []interface{}
-	query := u.gen.SelectStmt()
+	qbuf := u.gen.SelectStmt()
 
 	switch typ := filt.(type) {
 	case core.FilterUserAll:
-
-	case core.FilterUserActiveUsers:
-		query = query + " WHERE state_id = 'Active'"
+	case core.FilterUserByStateId:
+		fmt.Fprintf(qbuf, " WHERE state_id = '%s'", string(typ.StateId))
 
 	case *core.FilterUserKeyIn:
 		total, keyLen := len(typ.KeyList), len((core.UserKey{}).FieldSet().Vals())
-		query = fmt.Sprintf("%s WHERE (id) IN %s", query, sqlhelpers.PlaceholderKeyIn(total, keyLen))
 		args = make([]interface{}, total*keyLen)
-		for i, v := range typ.KeyList {
-			//Need to refactor composite primary keys (more than one key)
-			args[i] = v.FieldSet().Vals()[0]
+
+		for i, s, kls := 0, typ.KeyList[:keyLen], typ.KeyList[keyLen:]; ; i, s, kls = i+1, kls[:keyLen], kls[keyLen:] {
+			for j, u := range s {
+				args[i] = u.FieldSet().Vals()[j]
+			}
+			if len(kls) == 0 {
+				break
+			}
 		}
+
+		fmt.Fprintf(qbuf, " WHERE (id) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
 
 	default:
 		err = fmt.Errorf("Unknown UserFilter Type %#v", typ)
 		return
 	}
 
-	if err = sqlhelpers.Select(ctx, &ls, query, args...); err != nil {
+	if err = sqlhelpers.Select(ctx, &ls, qbuf.String(), args...); err != nil {
 		return
 	}
 	return
