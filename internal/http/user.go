@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/FourSigma/alertd/internal/core"
@@ -17,7 +16,6 @@ func UserCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		strId := chi.URLParam(r, "userId")
 		userId, err := uuid.FromString(strId)
-		fmt.Println("UserId", userId, err)
 		if err != nil {
 			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathUserId, err)
 			return

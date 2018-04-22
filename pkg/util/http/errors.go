@@ -8,6 +8,10 @@ import (
 
 type errMsg string
 
+func (e errMsg) Error() string {
+	return string(e)
+}
+
 const (
 	ErrorJSONDecoding          errMsg = "[JSON] decoding json body"
 	ErrorJSONEncoding          errMsg = "[JSON] encoding json body"
@@ -47,8 +51,8 @@ func (e errorMsg) Error() string {
 	return fmt.Sprintf("%s -- %s", string(e.Msg), e.OrginalError)
 }
 
-func HandleError(w http.ResponseWriter, eCode errMsg, err error) {
-	e := &errorMsg{Msg: eCode, OrginalError: err}
+func HandleError(w http.ResponseWriter, eCode errMsg, uerr error) {
+	e := &errorMsg{Msg: eCode, OrginalError: uerr}
 	var code int
 	var ok bool
 	code, ok = errCodeMap[e.Msg]
@@ -58,7 +62,7 @@ func HandleError(w http.ResponseWriter, eCode errMsg, err error) {
 		return
 	}
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(&Response{Status: code, Data: nil, Error: err}); err != nil {
+	if err := json.NewEncoder(w).Encode(&Response{Status: code, Data: nil, Error: eCode}); err != nil {
 		http.Error(w, string(ErrorJSONEncoding), http.StatusInternalServerError)
 		return
 	}
