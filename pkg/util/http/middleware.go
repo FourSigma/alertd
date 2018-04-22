@@ -10,7 +10,7 @@ func ParseQuery(next http.Handler) http.Handler {
 			HandleError(w, ErrorParsingQueryParams, err)
 			return
 		}
-		//ctx := context.WithValue(r.Context(), CtxUserId, core.UserKey{Id: userId})
-		//next.ServeHTTP(w, r.WithContext(ctx))
+		//TODO Parse logic here
+		next.ServeHTTP(w, r)
 	})
 }

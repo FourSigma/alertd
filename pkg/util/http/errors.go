@@ -52,10 +52,12 @@ func HandleError(w http.ResponseWriter, eCode errMsg, err error) {
 	var code int
 	var ok bool
 	code, ok = errCodeMap[e.Msg]
+	fmt.Println("My Code", code)
 	if !ok {
 		http.Error(w, fmt.Sprintf("Unknown error: %s", string(e.Msg)), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(&Response{Status: code, Data: nil, Error: err}); err != nil {
 		http.Error(w, string(ErrorJSONEncoding), http.StatusInternalServerError)
 		return

@@ -58,15 +58,19 @@ type api struct {
 func (u *api) Run() error {
 	return http.ListenAndServe(":"+u.port, u.routes())
 }
-func (u *api) routes() (r chi.Router) {
+func (u *api) routes() chi.Router {
 	//Middleware
 	u.r.Use(
+		middleware.RequestID,
+		middleware.RealIP,
 		middleware.Logger,
+		middleware.Recoverer,
 		RepoCtx,
 	)
-	return u.r.Route("/v1", func(r chi.Router) {
+	u.r.Route("/v1", func(r chi.Router) {
 		u.userRoutes(r)
 	})
+	return u.r
 }
 
 func (u *api) userRoutes(r chi.Router) {
