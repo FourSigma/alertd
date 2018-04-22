@@ -13,10 +13,10 @@ import (
 type httpCtxKey string
 
 const (
-	CtxUserId    httpCtxKey = "UserId"
-	CtxTokenId   httpCtxKey = "TokenId"
-	CtxTopicId   httpCtxKey = "TopicId"
-	CtxMessageId httpCtxKey = "MessageId"
+	CtxUserId    httpCtxKey = "UserKey"
+	CtxTokenId   httpCtxKey = "TokenKey"
+	CtxTopicId   httpCtxKey = "TopicKey"
+	CtxMessageId httpCtxKey = "MessageKey"
 )
 
 func RepoCtx(next http.Handler) http.Handler {
@@ -26,8 +26,8 @@ func RepoCtx(next http.Handler) http.Handler {
 	})
 }
 
-func NewAPI() *API {
-	return &API{
+func NewAPI(port string) *api {
+	return &api{
 		User: &UserResource{
 			user: service.NewUserService(),
 		},
@@ -40,20 +40,25 @@ func NewAPI() *API {
 		Message: &MessageResource{
 			message: service.NewMessageService(),
 		},
-		r: chi.NewRouter(),
+		r:    chi.NewRouter(),
+		port: port,
 	}
 }
 
-type API struct {
+type api struct {
 	User    *UserResource
 	Token   *TokenResource
 	Topic   *TopicResource
 	Message *MessageResource
 
-	r chi.Router
+	r    chi.Router
+	port string
 }
 
-func (u *API) Routes() (r chi.Router) {
+func (u *api) Run() error {
+	return http.ListenAndServe(":"+u.port, u.routes())
+}
+func (u *api) routes() (r chi.Router) {
 	//Middleware
 	u.r.Use(
 		middleware.Logger,
@@ -64,7 +69,7 @@ func (u *API) Routes() (r chi.Router) {
 	})
 }
 
-func (u *API) userRoutes(r chi.Router) {
+func (u *api) userRoutes(r chi.Router) {
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/", u.User.Create)
 		r.With(utilhttp.ParseQuery).Get("/", u.User.Index)
@@ -84,11 +89,44 @@ func (u *API) userRoutes(r chi.Router) {
 					r.Delete("/", u.Token.Delete)
 				})
 			})
+
+			r.Route("/topics", func(r chi.Router) {
+				r.Post("/", u.Token.Create)
+				r.Route("/{tokenId}", func(r chi.Router) {
+					r.Use(TokenCtx)
+					r.Get("/", u.Token.Get)
+					r.Put("/", u.Token.Update)
+					r.Delete("/", u.Token.Delete)
+				})
+			})
 		})
 	})
 }
 
-func (u *API) tokenRoutes(r chi.Router) {
+func (u *api) tokenRoutes(r chi.Router) {
+	r.Route("/tokens", func(r chi.Router) {
+		r.With(utilhttp.ParseQuery).Get("/", u.Token.Index)
+
+		r.Route("/{tokenId}", func(r chi.Router) {
+			r.Use(UserCtx)
+			r.Get("/", u.User.Get)
+			r.Put("/", u.User.Update)
+			r.Delete("/", u.User.Delete)
+
+			r.Route("/tokens", func(r chi.Router) {
+				r.Post("/", u.Token.Create)
+				r.Route("/{tokenId}", func(r chi.Router) {
+					r.Use(TokenCtx)
+					r.Get("/", u.Token.Get)
+					r.Put("/", u.Token.Update)
+					r.Delete("/", u.Token.Delete)
+				})
+			})
+		})
+	})
+}
+
+func (u *api) topicRoutes(r chi.Router) {
 	r.Route("/tokens", func(r chi.Router) {
 		r.With(utilhttp.ParseQuery).Get("/", u.Token.Index)
 

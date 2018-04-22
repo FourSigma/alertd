@@ -33,10 +33,6 @@ type UserResource struct {
 }
 
 func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
 	req := &service.UserCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
@@ -71,11 +67,6 @@ func (u UserResource) Delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserResource) Update(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
-
 	key := r.Context().Value(CtxUserId).(core.UserKey)
 	req := &service.UserUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {

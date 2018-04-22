@@ -12,21 +12,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func init() {
-	rootRoute.Route("/messages", func(r chi.Router) {
-		tkn := MessageResource{}
-		r.Post("/", tkn.Create)
-		r.With(utilhttp.ParseQuery).Get("/", tkn.Index)
-
-		r.Route("/{messageId}", func(r chi.Router) {
-			r.Use(MessageCtx)
-			r.Get("/", tkn.Get)
-			r.Put("/", tkn.Update)
-			r.Delete("/", tkn.Delete)
-		})
-	})
-}
-
 func MessageCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		strId := chi.URLParam(r, "messageId")
@@ -45,10 +30,6 @@ type MessageResource struct {
 }
 
 func (u MessageResource) Create(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
 	req := &service.MessageCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
@@ -83,11 +64,6 @@ func (u MessageResource) Delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u MessageResource) Update(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
-
 	key := r.Context().Value(CtxMessageId).(core.MessageKey)
 	req := &service.MessageUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {

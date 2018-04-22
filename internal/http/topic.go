@@ -12,21 +12,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func init() {
-	rootRoute.Route("/topics", func(r chi.Router) {
-		tkn := TopicResource{}
-		r.Post("/", tkn.Create)
-		r.With(utilhttp.ParseQuery).Get("/", tkn.Index)
-
-		r.Route("/{topicId}", func(r chi.Router) {
-			r.Use(TopicCtx)
-			r.Get("/", tkn.Get)
-			r.Put("/", tkn.Update)
-			r.Delete("/", tkn.Delete)
-		})
-	})
-}
-
 func TopicCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		strId := chi.URLParam(r, "topicId")
@@ -45,10 +30,6 @@ type TopicResource struct {
 }
 
 func (u TopicResource) Create(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
 	req := &service.TopicCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
@@ -83,11 +64,6 @@ func (u TopicResource) Delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u TopicResource) Update(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
-
 	key := r.Context().Value(CtxTopicId).(core.TopicKey)
 	req := &service.TopicUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {

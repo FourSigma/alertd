@@ -30,10 +30,6 @@ type TokenResource struct {
 }
 
 func (u TokenResource) Create(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
 	usrKey := r.Context().Value(CtxUserId).(core.UserKey)
 
 	req := &service.TokenCreateRequest{Data: &core.Token{UserId: usrKey.Id}}
@@ -70,11 +66,8 @@ func (u TokenResource) Delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u TokenResource) Update(rw http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
-		return
-	}
 	key := r.Context().Value(CtxTokenId).(core.TokenKey)
+
 	req := &service.TokenUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
@@ -86,6 +79,7 @@ func (u TokenResource) Update(rw http.ResponseWriter, r *http.Request) {
 		utilhttp.HandleError(rw, utilhttp.ErrorUpdatingResource, err)
 		return
 	}
+
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }
 
