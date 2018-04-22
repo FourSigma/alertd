@@ -7,6 +7,7 @@ import (
 	"github.com/FourSigma/alertd/internal/service"
 	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 type httpCtxKey string
@@ -51,8 +52,15 @@ type ResourceManager struct {
 	Message *MessageResource
 }
 
-func (u *ResourceManager) Routes(r chi.Router) chi.Router {
-	return r.With(RepoCtx).Route("/v1", func(r chi.Router) {
+func (u *ResourceManager) Routes() (r chi.Router) {
+	r = chi.NewRouter()
+	//Middleware
+	r.Use(
+		middleware.Logger,
+
+		RepoCtx,
+	)
+	return r.Route("/v1", func(r chi.Router) {
 		u.userRoutes(r)
 	})
 }
