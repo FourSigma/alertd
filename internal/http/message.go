@@ -12,37 +12,49 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func UserCtx(next http.Handler) http.Handler {
+func init() {
+	rootRoute.Route("/messages", func(r chi.Router) {
+		tkn := MessageResource{}
+		r.Post("/", tkn.Create)
+		r.With(utilhttp.ParseQuery).Get("/", tkn.Index)
+
+		r.Route("/{messageId}", func(r chi.Router) {
+			r.Use(MessageCtx)
+			r.Get("/", tkn.Get)
+			r.Put("/", tkn.Update)
+			r.Delete("/", tkn.Delete)
+		})
+	})
+}
+
+func MessageCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		strId := chi.URLParam(r, "userId")
-		userId, err := uuid.FromString(strId)
+		strId := chi.URLParam(r, "messageId")
+		messageId, err := uuid.FromString(strId)
 		if err != nil {
-			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathUserId, err)
+			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathMessageId, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), CtxUserId, core.UserKey{Id: userId})
+		ctx := context.WithValue(r.Context(), CtxMessageId, core.MessageKey{Id: messageId})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func init() {
+type MessageResource struct {
+	message *service.MessageService
 }
 
-type UserResource struct {
-	user *service.UserService
-}
-
-func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {
+func (u MessageResource) Create(rw http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
-	req := &service.UserCreateRequest{}
+	req := &service.MessageCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
 	}
-	resp, err := u.user.Create(r.Context(), req)
+	resp, err := u.message.Create(r.Context(), req)
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorCreatingResource, err)
 		return
@@ -50,9 +62,9 @@ func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusCreated, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u UserResource) Get(rw http.ResponseWriter, r *http.Request) {
-	key := r.Context().Value(CtxUserId).(core.UserKey)
-	resp, err := u.user.Get(r.Context(), &service.UserGetRequest{Key: key})
+func (u MessageResource) Get(rw http.ResponseWriter, r *http.Request) {
+	key := r.Context().Value(CtxMessageId).(core.MessageKey)
+	resp, err := u.message.Get(r.Context(), &service.MessageGetRequest{Key: key})
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorGetResource, err)
 		return
@@ -60,9 +72,9 @@ func (u UserResource) Get(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u UserResource) Delete(rw http.ResponseWriter, r *http.Request) {
-	key := r.Context().Value(CtxUserId).(core.UserKey)
-	resp, err := u.user.Delete(r.Context(), &service.UserDeleteRequest{Key: key})
+func (u MessageResource) Delete(rw http.ResponseWriter, r *http.Request) {
+	key := r.Context().Value(CtxMessageId).(core.MessageKey)
+	resp, err := u.message.Delete(r.Context(), &service.MessageDeleteRequest{Key: key})
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorDeletingResource, err)
 		return
@@ -70,20 +82,20 @@ func (u UserResource) Delete(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Key})
 }
 
-func (u UserResource) Update(rw http.ResponseWriter, r *http.Request) {
+func (u MessageResource) Update(rw http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorEmptyBody, nil)
 		return
 	}
 
-	key := r.Context().Value(CtxUserId).(core.UserKey)
-	req := &service.UserUpdateRequest{Key: key}
+	key := r.Context().Value(CtxMessageId).(core.MessageKey)
+	req := &service.MessageUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
 	}
 
-	resp, err := u.user.Update(r.Context(), req)
+	resp, err := u.message.Update(r.Context(), req)
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorUpdatingResource, err)
 		return
@@ -91,5 +103,5 @@ func (u UserResource) Update(rw http.ResponseWriter, r *http.Request) {
 	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }
 
-func (u UserResource) Index(rw http.ResponseWriter, r *http.Request) {
+func (u MessageResource) Index(rw http.ResponseWriter, r *http.Request) {
 }

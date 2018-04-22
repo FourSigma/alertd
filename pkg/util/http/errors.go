@@ -9,31 +9,33 @@ import (
 type errMsg string
 
 const (
-	ErrorJSONDecoding        errMsg = "[JSON] decoding json body"
-	ErrorJSONEncoding        errMsg = "[JSON] encoding json body"
-	ErrorEmptyBody           errMsg = "[HTTP] empty message body"
-	ErrorDecodingPathUserId  errMsg = "[URLPath] error decoding userId path"
-	ErrorDecodingPathTokenId errMsg = "[URLPath] error decoding tokenId path"
-	ErrorDecodingPathTopicId errMsg = "[URLPath] error decoding topicId path"
-	ErrorCreatingResource    errMsg = "[Resource] error creating resource"
-	ErrorDeletingResource    errMsg = "[Resource] error deleting resource"
-	ErrorUpdatingResource    errMsg = "[Resource] error updating resource"
-	ErrorGetResource         errMsg = "[Resource] error geting resource"
-	ErrorParsingQueryParams  errMsg = "[Query] error parsing query parameters"
+	ErrorJSONDecoding          errMsg = "[JSON] decoding json body"
+	ErrorJSONEncoding          errMsg = "[JSON] encoding json body"
+	ErrorEmptyBody             errMsg = "[HTTP] empty message body"
+	ErrorDecodingPathUserId    errMsg = "[URLPath] error decoding userId path"
+	ErrorDecodingPathTokenId   errMsg = "[URLPath] error decoding tokenId path"
+	ErrorDecodingPathTopicId   errMsg = "[URLPath] error decoding topicId path"
+	ErrorDecodingPathMessageId errMsg = "[URLPath] error decoding messageId path"
+	ErrorCreatingResource      errMsg = "[Resource] error creating resource"
+	ErrorDeletingResource      errMsg = "[Resource] error deleting resource"
+	ErrorUpdatingResource      errMsg = "[Resource] error updating resource"
+	ErrorGetResource           errMsg = "[Resource] error geting resource"
+	ErrorParsingQueryParams    errMsg = "[Query] error parsing query parameters"
 )
 
 var errCodeMap = map[errMsg]int{
-	ErrorJSONDecoding:        http.StatusInternalServerError,
-	ErrorJSONEncoding:        http.StatusInternalServerError,
-	ErrorEmptyBody:           http.StatusBadRequest,
-	ErrorDecodingPathTokenId: http.StatusBadRequest,
-	ErrorDecodingPathUserId:  http.StatusBadRequest,
-	ErrorDecodingPathTopicId: http.StatusBadRequest,
-	ErrorCreatingResource:    http.StatusInternalServerError,
-	ErrorDeletingResource:    http.StatusInternalServerError,
-	ErrorUpdatingResource:    http.StatusInternalServerError,
-	ErrorGetResource:         http.StatusInternalServerError,
-	ErrorParsingQueryParams:  http.StatusBadRequest,
+	ErrorJSONDecoding:          http.StatusInternalServerError,
+	ErrorJSONEncoding:          http.StatusInternalServerError,
+	ErrorEmptyBody:             http.StatusBadRequest,
+	ErrorDecodingPathTokenId:   http.StatusBadRequest,
+	ErrorDecodingPathUserId:    http.StatusBadRequest,
+	ErrorDecodingPathTopicId:   http.StatusBadRequest,
+	ErrorDecodingPathMessageId: http.StatusBadRequest,
+	ErrorCreatingResource:      http.StatusInternalServerError,
+	ErrorDeletingResource:      http.StatusInternalServerError,
+	ErrorUpdatingResource:      http.StatusInternalServerError,
+	ErrorGetResource:           http.StatusInternalServerError,
+	ErrorParsingQueryParams:    http.StatusBadRequest,
 }
 
 type errorMsg struct {
