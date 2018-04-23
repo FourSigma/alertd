@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/FourSigma/alertd/internal/core"
+	"github.com/FourSigma/alertd/pkg/util"
 )
 
 type UserCreateRequest struct {
-	Data *core.User
+	*core.User
+	Password string `json:"password"`
 }
 
 type UserCreateResponse struct {
@@ -49,10 +52,13 @@ type UserService struct {
 }
 
 func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *UserCreateResponse, err error) {
-	if err = u.usrRepo.Create(ctx, req.Data); err != nil {
+
+	req.PasswordSalt, req.PasswordHash = util.EncryptPassword(req.Password)
+	if err = u.usrRepo.Create(ctx, req.User); err != nil {
+		fmt.Println(err)
 		return
 	}
-	resp = &UserCreateResponse{Data: req.Data}
+	resp = &UserCreateResponse{Data: req.User}
 	return
 }
 func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *UserUpdateResponse, err error) {

@@ -45,6 +45,7 @@ func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {
 
 func (u UserResource) Get(rw http.ResponseWriter, r *http.Request) {
 	key := r.Context().Value(CtxUserId).(core.UserKey)
+
 	resp, err := u.user.Get(r.Context(), &service.UserGetRequest{Key: key})
 	if err != nil {
 		utilhttp.HandleError(rw, utilhttp.ErrorGetResource, err)

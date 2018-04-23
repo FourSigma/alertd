@@ -30,18 +30,18 @@ func NewUser(firstName string, lastName string, email string, password string) *
 
 type UserStateId string
 type User struct {
-	Id           uuid.UUID
-	FirstName    string      `db:"first_name"`
-	LastName     string      `db:"last_name"`
-	Email        string      `db:"email"`
-	PasswordSalt string      `db:"password_salt"`
-	PasswordHash string      `db:"password_hash"`
-	StateId      UserStateId `db:"state_id"`
-	CreatedAt    time.Time   `db:"created_at"`
-	UpdatedAt    time.Time   `db:"updated_at"`
+	Id           uuid.UUID   `json:"id,omitempty" db:"id"`
+	FirstName    string      `json:"firstName,omitempty" db:"first_name"`
+	LastName     string      `json:"lastName,omitempty" db:"last_name"`
+	Email        string      `json:"email,omitempty" db:"email"`
+	PasswordSalt string      `json:"-" db:"password_salt"`
+	PasswordHash string      `json:"-" db:"password_hash"`
+	StateId      UserStateId `json:"stateId,omitempty" db:"state_id"`
+	CreatedAt    time.Time   `json:"createdAt,omitempty" db:"created_at"`
+	UpdatedAt    time.Time   `json:"updatedAt,omitempty" db:"updated_at"`
 
-	TopicList TopicList
-	TokenList TokenList
+	TopicList TopicList `json:"topicList,omitempty"`
+	TokenList TokenList `json:"tokenList,omitempty"`
 }
 
 func (u User) Key() UserKey {
