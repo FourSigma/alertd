@@ -62,7 +62,7 @@ func HandleError(w http.ResponseWriter, eCode errMsg, uerr error) {
 		return
 	}
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(&Response{Status: code, Data: nil, Error: eCode}); err != nil {
+	if err := json.NewEncoder(w).Encode(&Response{Code: code, Data: nil, Error: eCode}); err != nil {
 		http.Error(w, string(ErrorJSONEncoding), http.StatusInternalServerError)
 		return
 	}
