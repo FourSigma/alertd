@@ -3,7 +3,10 @@
 
 [[projects]]
   name = "github.com/go-chi/chi"
-  packages = ["."]
+  packages = [
+    ".",
+    "middleware"
+  ]
   revision = "e83ac2304db3c50cf03d96a2fcd39009d458bc35"
   version = "v3.3.2"
 
@@ -31,9 +34,18 @@
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
   version = "v1.2.0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = [
+    "bcrypt",
+    "blowfish"
+  ]
+  revision = "e73bf333ef8920dbb52ad18d4bd38ad9d9bc76d7"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "61c59ead3a9b8ef1fc5ba0d2de4d7cce67b3ce5237ce87b3f76d1687a4bdb072"
+  inputs-digest = "ef148919130de3674d939efea81b80ed24f469642c471041015e29972f51c6b0"
   solver-name = "gps-cdcl"
   solver-version = 1

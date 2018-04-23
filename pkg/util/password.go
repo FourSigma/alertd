@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var randSrc rand.Source
 
 const (
-	saltLen = 30
+	saltLEN  = 30
+	hashCOST = 14
 )
 
 func init() {
@@ -19,17 +22,14 @@ func init() {
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 //TODO: Placeholder bycrypt
-func EncryptPassword(password string) (salt string, hash string) {
+func EncryptPassword(password string) (salt string, hash string, err error) {
 	cs := []rune(charSet)
-	rs := make([]rune, saltLen)
-	for i := 0; i < saltLen; i++ {
+	rs := make([]rune, saltLEN)
+	for i := 0; i < saltLEN; i++ {
 		rs[i] = cs[rand.Intn(len(cs))]
 	}
 	salt = string(rs)
-	hash = hashPassword(salt, password)
+	password = fmt.Sprintf("%s:%s", salt, password)
+	hash, err = bcrypt.GenerateFromPassword([]byte(password), hashCOST)
 	return
-}
-
-func hashPassword(salt string, password string) string {
-	return fmt.Sprintf("%s:%s", salt, password)
 }
