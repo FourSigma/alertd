@@ -30,6 +30,7 @@ func EncryptPassword(password string) (salt string, hash string, err error) {
 	}
 	salt = string(rs)
 	password = fmt.Sprintf("%s:%s", salt, password)
-	hash, err = bcrypt.GenerateFromPassword([]byte(password), hashCOST)
-	return
+	var bs []byte
+	bs, err = bcrypt.GenerateFromPassword([]byte(password), hashCOST)
+	return salt, string(bs), err
 }

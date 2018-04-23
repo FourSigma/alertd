@@ -31,8 +31,8 @@ type UserDeleteResponse struct {
 }
 
 type UserUpdateRequest struct {
-	Key  core.UserKey
-	Data *core.User `json:"data"`
+	Key core.UserKey
+	*core.User
 }
 type UserUpdateResponse struct {
 	Data *core.User
@@ -52,7 +52,10 @@ type UserService struct {
 }
 
 func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *UserCreateResponse, err error) {
-	req.PasswordSalt, req.PasswordHash = util.EncryptPassword(req.Password)
+	req.PasswordSalt, req.PasswordHash, err = util.EncryptPassword(req.Password)
+	if err != nil {
+		return
+	}
 	if err = u.usrRepo.Create(ctx, req.User); err != nil {
 		fmt.Println(err)
 		return
@@ -61,8 +64,8 @@ func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *
 	return
 }
 func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *UserUpdateResponse, err error) {
-	resp = &UserUpdateResponse{Data: req.Data}
-	if err = u.usrRepo.Update(ctx, req.Key, req.Data); err != nil {
+	resp = &UserUpdateResponse{Data: req.User}
+	if err = u.usrRepo.Update(ctx, req.Key, req.User); err != nil {
 		fmt.Println(err)
 		return
 	}
