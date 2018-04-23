@@ -81,4 +81,12 @@ func (u UserResource) Update(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserResource) Index(rw http.ResponseWriter, r *http.Request) {
+	req := &service.UserListRequest{}
+	req.Filter = core.FilterUserAll{}
+	resp, err := u.user.List(r.Context(), req)
+	if err != nil {
+		utilhttp.HandleError(rw, utilhttp.ErrorUpdatingResource, err)
+		return
+	}
+	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: resp.Data})
 }

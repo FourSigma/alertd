@@ -32,7 +32,7 @@ type UserDeleteResponse struct {
 
 type UserUpdateRequest struct {
 	Key  core.UserKey
-	Data *core.User
+	Data *core.User `json:"data"`
 }
 type UserUpdateResponse struct {
 	Data *core.User
@@ -52,7 +52,6 @@ type UserService struct {
 }
 
 func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *UserCreateResponse, err error) {
-
 	req.PasswordSalt, req.PasswordHash = util.EncryptPassword(req.Password)
 	if err = u.usrRepo.Create(ctx, req.User); err != nil {
 		fmt.Println(err)
@@ -62,10 +61,11 @@ func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *
 	return
 }
 func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *UserUpdateResponse, err error) {
+	resp = &UserUpdateResponse{Data: req.Data}
 	if err = u.usrRepo.Update(ctx, req.Key, req.Data); err != nil {
+		fmt.Println(err)
 		return
 	}
-	resp = &UserUpdateResponse{Data: req.Data}
 	return
 }
 
@@ -93,4 +93,14 @@ func (u UserService) List(ctx context.Context, req *UserListRequest) (resp *User
 	}
 	resp = &UserListResponse{Data: ds}
 	return
+}
+func (u UserService) AuthList(ctx context.Context, req *UserListRequest) (err error) {
+	err = ErrorUnauthorized{}
+	return
+}
+
+type ErrorUnauthorized struct{}
+
+func (e ErrorUnauthorized) Error() string {
+	return "Unauthorized Access"
 }
