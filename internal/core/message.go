@@ -28,8 +28,7 @@ type Message struct {
 
 func (u Message) Key() MessageKey {
 	return MessageKey{
-		Id:      u.Id,
-		TopicId: u.TopicId,
+		Id: u.Id,
 	}
 }
 
@@ -51,14 +50,12 @@ func (u Message) TopicKey() TopicKey {
 }
 
 type MessageKey struct {
-	Id      uuid.UUID
-	TopicId uuid.UUID
+	Id uuid.UUID
 }
 
 func (u MessageKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("MessageKey",
 		util.NewField("Id", u.Id, &u.Id, false),
-		util.NewField("TopicId", u.TopicId, &u.TopicId, true),
 	)
 }
 

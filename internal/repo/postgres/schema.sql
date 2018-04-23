@@ -38,7 +38,7 @@ CREATE TABLE alertd.messages
     type_id text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz NOT NULL,
-    PRIMARY KEY(id, topic_id)
+    PRIMARY KEY(id)
 );
 INSERT INTO alertd.users
     (id, first_name, last_name, email, password_salt, password_hash, state_id, created_at, updated_at)
