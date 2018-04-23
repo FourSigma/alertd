@@ -8,6 +8,7 @@ import (
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
 	_ "github.com/lib/pq"
+	uuid "github.com/satori/go.uuid"
 )
 
 type userRepo struct {
@@ -15,7 +16,9 @@ type userRepo struct {
 }
 
 func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
+	user.Id = uuid.NewV4()
 	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 	return sqlhelpers.Insert(ctx, u.gen, user.FieldSet())
 }
 

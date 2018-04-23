@@ -16,6 +16,7 @@ type tokenRepo struct {
 
 func (u tokenRepo) Create(ctx context.Context, token *core.Token) (err error) {
 	token.CreatedAt = time.Now()
+	token.UpdatedAt = time.Now()
 	return sqlhelpers.Insert(ctx, u.gen, token.FieldSet())
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
+	uuid "github.com/satori/go.uuid"
 )
 
 type messageRepo struct {
@@ -14,7 +15,9 @@ type messageRepo struct {
 }
 
 func (u messageRepo) Create(ctx context.Context, message *core.Message) (err error) {
+	message.Id = uuid.NewV4()
 	message.CreatedAt = time.Now()
+	message.UpdatedAt = time.Now()
 	return sqlhelpers.Insert(ctx, u.gen, message.FieldSet())
 }
 
