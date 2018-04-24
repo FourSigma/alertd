@@ -65,8 +65,16 @@ func (u *User) FieldSet() util.FieldSet {
 	)
 }
 
+func (u *User) New() util.FieldSetter {
+	return &User{}
+}
+
 type UserKey struct {
 	Id uuid.UUID
+}
+
+func (u UserKey) IsValid() error {
+	return nil
 }
 
 func (u UserKey) FieldSet() util.FieldSet {

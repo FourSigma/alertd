@@ -26,6 +26,10 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
+func (u *Message) New() util.FieldSetter {
+	return &Message{}
+}
+
 func (u Message) Key() MessageKey {
 	return MessageKey{
 		Id: u.Id,
@@ -53,6 +57,9 @@ type MessageKey struct {
 	Id uuid.UUID
 }
 
+func (u MessageKey) IsValid() error {
+	return nil
+}
 func (u MessageKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("MessageKey",
 		util.NewField("Id", u.Id, &u.Id, false),

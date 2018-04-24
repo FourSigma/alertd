@@ -65,6 +65,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 	}
 
 	if err = u.crud.Select(ctx, &ls, qbuf.String(), args); err != nil {
+		fmt.Println(err)
 		return
 	}
 	return

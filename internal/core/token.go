@@ -29,6 +29,10 @@ type Token struct {
 	User *User
 }
 
+func (u *Token) New() util.FieldSetter {
+	return &Token{}
+}
+
 func (u *Token) FieldSet() util.FieldSet {
 	return util.NewFieldSet("Token",
 		util.NewField("UserId", u.UserId, &u.UserId, false),
@@ -57,6 +61,9 @@ type TokenKey struct {
 	Token  string
 }
 
+func (u TokenKey) IsValid() error {
+	return nil
+}
 func (u TokenKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("TokenKey",
 		util.NewField("UserId", u.UserId, &u.UserId, false),

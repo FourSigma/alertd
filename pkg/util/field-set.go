@@ -30,6 +30,23 @@ func NewField(name string, value interface{}, ptr interface{}, canUpdate bool) F
 type FieldSetter interface {
 	FieldSet() FieldSet
 }
+type Constructor interface {
+	New() FieldSetter
+}
+
+type Entity interface {
+	FieldSetter
+	Constructor
+}
+
+type Validator interface {
+	IsValid() error
+}
+
+type EntityKey interface {
+	FieldSetter
+	Validator
+}
 
 type Field struct {
 	name      string

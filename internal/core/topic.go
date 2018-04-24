@@ -28,6 +28,10 @@ type Topic struct {
 	User *User
 }
 
+func (u *Topic) New() util.FieldSetter {
+	return &Topic{}
+}
+
 func (u *Topic) FieldSet() util.FieldSet {
 	return util.NewFieldSet("Topic",
 		util.NewField("Id", u.Id, &u.Id, false),
@@ -54,6 +58,9 @@ type TopicKey struct {
 	Id uuid.UUID
 }
 
+func (u TopicKey) IsValid() error {
+	return nil
+}
 func (u TopicKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("Topic",
 		util.NewField("Id", u.Id, &u.Id, false),
