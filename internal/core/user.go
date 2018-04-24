@@ -16,19 +16,6 @@ type UserRepo interface {
 	Update(context.Context, UserKey, *User) error
 }
 
-// func NewUser(firstName string, lastName string, email string, password string) (*User, error) {
-// 	salt, hash, err := util.EncryptPassword(password)
-// 	u := &User{
-// 		Id:           uuid.NewV4(),
-// 		FirstName:    firstName,
-// 		LastName:     lastName,
-// 		Email:        email,
-// 		PasswordSalt: salt,
-// 		PasswordHash: string(hash),
-// 	}
-// 	return u, err
-// }
-
 type UserStateId string
 type User struct {
 	Id           uuid.UUID   `json:"id,omitempty" db:"id"`
