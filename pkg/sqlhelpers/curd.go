@@ -22,7 +22,7 @@ type CRUD struct {
 func (c CRUD) StmtGenerator() StmtGenerator {
 	return c.gen
 }
-func (c CRUD) Insert(ctx context.Context, fs util.FieldSetter) (err error) {
+func (c CRUD) Insert(ctx context.Context, fs util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
 		return c.handleErr(err)
@@ -34,7 +34,7 @@ func (c CRUD) Insert(ctx context.Context, fs util.FieldSetter) (err error) {
 	return
 }
 
-func (c CRUD) Get(ctx context.Context, key util.FieldSetter, dest util.FieldSetter) (err error) {
+func (c CRUD) Get(ctx context.Context, key util.EntityKey, dest util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
 		return c.handleErr(err)
@@ -47,7 +47,7 @@ func (c CRUD) Get(ctx context.Context, key util.FieldSetter, dest util.FieldSett
 	return
 }
 
-func (c CRUD) Delete(ctx context.Context, key util.FieldSetter) (err error) {
+func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
 		return c.handleErr(err)
@@ -59,7 +59,7 @@ func (c CRUD) Delete(ctx context.Context, key util.FieldSetter) (err error) {
 	return
 }
 
-func (c CRUD) Update(ctx context.Context, key util.FieldSetter, dbFS util.FieldSetter, mod util.FieldSetter) (isEmpty bool, err error) {
+func (c CRUD) Update(ctx context.Context, key util.EntityKey, dbFS util.Entity, mod util.Entity) (isEmpty bool, err error) {
 	dfn, targs, isEmpty := UpdateFieldSetDiff(mod.FieldSet(), dbFS.FieldSet(), key.FieldSet())
 	if isEmpty {
 		isEmpty = true
