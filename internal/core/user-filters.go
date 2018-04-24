@@ -25,7 +25,7 @@ type FilterUserKeyIn struct {
 	cache map[UserKey]struct{}
 }
 
-func (f *FilterUserKeyIn) Valid() (err error) {
+func (f FilterUserKeyIn) Valid() (err error) {
 	if len(f.KeyList) == 0 {
 		err = errors.New("Invalid FilterUserKeyIn -- KeyList is empty")
 		return

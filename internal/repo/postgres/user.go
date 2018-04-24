@@ -26,7 +26,6 @@ func (u userRepo) Get(ctx context.Context, key core.UserKey) (usr core.User, err
 	if err = u.crud.Get(ctx, key, &usr); err != nil {
 		return
 	}
-	fmt.Println("GET USER", usr)
 	return
 }
 
