@@ -12,7 +12,7 @@ type TokenRepo interface {
 	Create(context.Context, *Token) error
 	Delete(context.Context, TokenKey) error
 	List(context.Context, TokenFilter, ...Opts) (TokenList, error)
-	Get(context.Context, TokenKey) (*Token, error)
+	Get(context.Context, TokenKey) (Token, error)
 	Update(context.Context, TokenKey, *Token) error
 }
 
@@ -29,7 +29,7 @@ type Token struct {
 	User *User
 }
 
-func (u *Token) New() util.FieldSetter {
+func (u *Token) New() util.Entity {
 	return &Token{}
 }
 

@@ -30,13 +30,10 @@ func NewField(name string, value interface{}, ptr interface{}, canUpdate bool) F
 type FieldSetter interface {
 	FieldSet() FieldSet
 }
-type Constructor interface {
-	New() FieldSetter
-}
 
 type Entity interface {
 	FieldSetter
-	Constructor
+	New() Entity
 }
 
 type Validator interface {

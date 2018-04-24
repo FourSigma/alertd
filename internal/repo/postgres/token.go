@@ -20,9 +20,8 @@ func (u tokenRepo) Create(ctx context.Context, token *core.Token) (err error) {
 	return u.crud.Insert(ctx, token)
 }
 
-func (u tokenRepo) Get(ctx context.Context, key core.TokenKey) (tkn *core.Token, err error) {
-	tkn = &core.Token{}
-	if err = u.crud.Get(ctx, key, tkn); err != nil {
+func (u tokenRepo) Get(ctx context.Context, key core.TokenKey) (tkn core.Token, err error) {
+	if err = u.crud.Get(ctx, key, &tkn); err != nil {
 		return
 	}
 	return
@@ -76,20 +75,8 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 }
 
 func (u tokenRepo) Update(ctx context.Context, key core.TokenKey, tkn *core.Token) (err error) {
-	//Get from database
-	dbTkn, err := u.Get(ctx, key)
-	if err != nil {
-		return
-	}
-
 	tkn.UpdatedAt = time.Now()
-
-	isEmpty, err := u.crud.Update(ctx, key, dbTkn, tkn)
-	if err != nil {
-		return
-	}
-	if isEmpty {
-		*tkn = *dbTkn
+	if err = u.crud.Update(ctx, key, tkn); err != nil {
 		return
 	}
 	return

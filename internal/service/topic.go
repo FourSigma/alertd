@@ -17,7 +17,7 @@ type TopicGetRequest struct {
 	Key core.TopicKey
 }
 type TopicGetResponse struct {
-	Data *core.Topic
+	Data core.Topic
 }
 
 type TopicDeleteRequest struct {
@@ -72,11 +72,10 @@ func (u TopicService) Delete(ctx context.Context, req *TopicDeleteRequest) (resp
 }
 
 func (u TopicService) Get(ctx context.Context, req *TopicGetRequest) (resp *TopicGetResponse, err error) {
-	var d *core.Topic
-	if d, err = u.tpRepo.Get(ctx, req.Key); err != nil {
+	resp = &TopicGetResponse{}
+	if resp.Data, err = u.tpRepo.Get(ctx, req.Key); err != nil {
 		return
 	}
-	resp = &TopicGetResponse{Data: d}
 	return
 }
 

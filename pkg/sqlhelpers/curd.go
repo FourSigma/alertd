@@ -59,22 +59,29 @@ func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 	return
 }
 
-func (c CRUD) Update(ctx context.Context, key util.EntityKey, dbFS util.Entity, mod util.Entity) (isEmpty bool, err error) {
-	dfn, targs, isEmpty := UpdateFieldSetDiff(mod.FieldSet(), dbFS.FieldSet(), key.FieldSet())
-	if isEmpty {
-		isEmpty = true
+func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (err error) {
+	db, err := GetQueryerFromContext(ctx)
+	if err != nil {
+		return c.handleErr(err)
+	}
+
+	//Get entity from database for comparison
+	dbEntity := mod.New()
+	if err = c.Get(ctx, key, dbEntity); err != nil {
 		return
 	}
 
-	db, err := GetQueryerFromContext(ctx)
-	if err != nil {
-		return false, c.handleErr(err)
+	dfn, targs, isEmpty := UpdateFieldSetDiff(mod.FieldSet(), dbEntity.FieldSet(), key.FieldSet())
+	if isEmpty {
+		mod = dbEntity
+		//Assign NotModfiedError here
+		return
 	}
 
 	stmt := c.gen.UpdateStmt(dfn)
 	fmt.Println(stmt)
 	if err = db.QueryRowxContext(ctx, stmt, targs...).Scan(mod.FieldSet().Ptrs()...); err != nil {
-		return false, c.handleErr(err)
+		return c.handleErr(err)
 	}
 	return
 }

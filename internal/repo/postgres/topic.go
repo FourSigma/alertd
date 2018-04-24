@@ -22,9 +22,8 @@ func (u topicRepo) Create(ctx context.Context, topic *core.Topic) (err error) {
 	return u.crud.Insert(ctx, topic)
 }
 
-func (u topicRepo) Get(ctx context.Context, key core.TopicKey) (tp *core.Topic, err error) {
-	tp = &core.Topic{}
-	if err = u.crud.Get(ctx, key, tp); err != nil {
+func (u topicRepo) Get(ctx context.Context, key core.TopicKey) (tp core.Topic, err error) {
+	if err = u.crud.Get(ctx, key, &tp); err != nil {
 		return
 	}
 	return
@@ -76,20 +75,8 @@ func (u topicRepo) List(ctx context.Context, filt core.TopicFilter, opts ...core
 }
 
 func (u topicRepo) Update(ctx context.Context, key core.TopicKey, tp *core.Topic) (err error) {
-	//Get from database
-	dbTp, err := u.Get(ctx, key)
-	if err != nil {
-		return
-	}
-
 	tp.UpdatedAt = time.Now()
-
-	isEmpty, err := u.crud.Update(ctx, key, dbTp, tp)
-	if err != nil {
-		return
-	}
-	if isEmpty {
-		*tp = *dbTp
+	if err = u.crud.Update(ctx, key, tp); err != nil {
 		return
 	}
 	return

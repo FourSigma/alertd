@@ -12,7 +12,7 @@ type TopicRepo interface {
 	Create(context.Context, *Topic) error
 	Delete(context.Context, TopicKey) error
 	List(context.Context, TopicFilter, ...Opts) (TopicList, error)
-	Get(context.Context, TopicKey) (*Topic, error)
+	Get(context.Context, TopicKey) (Topic, error)
 	Update(context.Context, TopicKey, *Topic) error
 }
 
@@ -28,7 +28,7 @@ type Topic struct {
 	User *User
 }
 
-func (u *Topic) New() util.FieldSetter {
+func (u *Topic) New() util.Entity {
 	return &Topic{}
 }
 

@@ -22,11 +22,11 @@ func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
 	return u.crud.Insert(ctx, user)
 }
 
-func (u userRepo) Get(ctx context.Context, key core.UserKey) (usr *core.User, err error) {
-	usr = &core.User{}
-	if err = u.crud.Get(ctx, key, usr); err != nil {
+func (u userRepo) Get(ctx context.Context, key core.UserKey) (usr core.User, err error) {
+	if err = u.crud.Get(ctx, key, &usr); err != nil {
 		return
 	}
+	fmt.Println("GET USER", usr)
 	return
 }
 
@@ -71,22 +71,9 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 	return
 }
 func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) (err error) {
-	//Get from database
-	dbUsr, err := u.Get(ctx, key)
-	if err != nil {
-		return
-	}
-
 	usr.UpdatedAt = time.Now()
-
-	isEmpty, err := u.crud.Update(ctx, key, dbUsr, usr)
-	if err != nil {
+	if err = u.crud.Update(ctx, key, usr); err != nil {
 		return
 	}
-	if isEmpty {
-		*usr = *dbUsr
-		return
-	}
-
 	return
 }

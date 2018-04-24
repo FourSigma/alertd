@@ -12,7 +12,7 @@ type MessageRepo interface {
 	Create(context.Context, *Message) error
 	Delete(context.Context, MessageKey) error
 	List(context.Context, MessageFilter, ...Opts) (MessageList, error)
-	Get(context.Context, MessageKey) (*Message, error)
+	Get(context.Context, MessageKey) (Message, error)
 	Update(context.Context, MessageKey, *Message) error
 }
 
@@ -26,7 +26,7 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-func (u *Message) New() util.FieldSetter {
+func (u *Message) New() util.Entity {
 	return &Message{}
 }
 

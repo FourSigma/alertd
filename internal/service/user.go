@@ -81,11 +81,11 @@ func (u UserService) Delete(ctx context.Context, req *UserDeleteRequest) (resp *
 }
 
 func (u UserService) Get(ctx context.Context, req *UserGetRequest) (resp *UserGetResponse, err error) {
-	var d *core.User
+	var d core.User
 	if d, err = u.usrRepo.Get(ctx, req.Key); err != nil {
 		return
 	}
-	resp = &UserGetResponse{Data: *d}
+	resp = &UserGetResponse{Data: d}
 	return
 }
 

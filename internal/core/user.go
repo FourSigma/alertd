@@ -12,7 +12,7 @@ type UserRepo interface {
 	Create(context.Context, *User) error
 	Delete(context.Context, UserKey) error
 	List(context.Context, UserFilter, ...Opts) (UserList, error)
-	Get(context.Context, UserKey) (*User, error)
+	Get(context.Context, UserKey) (User, error)
 	Update(context.Context, UserKey, *User) error
 }
 
@@ -65,7 +65,7 @@ func (u *User) FieldSet() util.FieldSet {
 	)
 }
 
-func (u *User) New() util.FieldSetter {
+func (u *User) New() util.Entity {
 	return &User{}
 }
 

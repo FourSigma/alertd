@@ -21,9 +21,8 @@ func (u messageRepo) Create(ctx context.Context, message *core.Message) (err err
 	return u.crud.Insert(ctx, message)
 }
 
-func (u messageRepo) Get(ctx context.Context, key core.MessageKey) (msg *core.Message, err error) {
-	msg = &core.Message{}
-	if err = u.crud.Get(ctx, key, msg); err != nil {
+func (u messageRepo) Get(ctx context.Context, key core.MessageKey) (msg core.Message, err error) {
+	if err = u.crud.Get(ctx, key, &msg); err != nil {
 		return
 	}
 	return
@@ -69,22 +68,9 @@ func (u messageRepo) List(ctx context.Context, filt core.MessageFilter, opts ...
 	return
 }
 func (u messageRepo) Update(ctx context.Context, key core.MessageKey, msg *core.Message) (err error) {
-	//Get from database
-	dbMsg, err := u.Get(ctx, key)
-	if err != nil {
-		return
-	}
-
 	msg.UpdatedAt = time.Now()
-
-	isEmpty, err := u.crud.Update(ctx, key, dbMsg, msg)
-	if err != nil {
+	if err = u.crud.Update(ctx, key, msg); err != nil {
 		return
 	}
-	if isEmpty {
-		*msg = *dbMsg
-		return
-	}
-
 	return
 }

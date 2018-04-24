@@ -17,7 +17,7 @@ type TokenGetRequest struct {
 	Key core.TokenKey
 }
 type TokenGetResponse struct {
-	Data *core.Token
+	Data core.Token
 }
 
 type TokenDeleteRequest struct {
@@ -72,11 +72,10 @@ func (u TokenService) Delete(ctx context.Context, req *TokenDeleteRequest) (resp
 }
 
 func (u TokenService) Get(ctx context.Context, req *TokenGetRequest) (resp *TokenGetResponse, err error) {
-	var d *core.Token
-	if d, err = u.tknRepo.Get(ctx, req.Key); err != nil {
+	resp = &TokenGetResponse{}
+	if resp.Data, err = u.tknRepo.Get(ctx, req.Key); err != nil {
 		return
 	}
-	resp = &TokenGetResponse{Data: d}
 	return
 }
 

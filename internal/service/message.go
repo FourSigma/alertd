@@ -17,7 +17,7 @@ type MessageGetRequest struct {
 	Key core.MessageKey
 }
 type MessageGetResponse struct {
-	Data *core.Message
+	Data core.Message
 }
 
 type MessageDeleteRequest struct {
@@ -72,11 +72,10 @@ func (u MessageService) Delete(ctx context.Context, req *MessageDeleteRequest) (
 }
 
 func (u MessageService) Get(ctx context.Context, req *MessageGetRequest) (resp *MessageGetResponse, err error) {
-	var d *core.Message
-	if d, err = u.msgRepo.Get(ctx, req.Key); err != nil {
+	resp = &MessageGetResponse{}
+	if resp.Data, err = u.msgRepo.Get(ctx, req.Key); err != nil {
 		return
 	}
-	resp = &MessageGetResponse{Data: d}
 	return
 }
 
