@@ -11,25 +11,25 @@ import (
 )
 
 type tokenRepo struct {
-	gen *sqlhelpers.StmtGenerator
+	crud sqlhelpers.CRUD
 }
 
 func (u tokenRepo) Create(ctx context.Context, token *core.Token) (err error) {
 	token.CreatedAt = time.Now()
 	token.UpdatedAt = time.Now()
-	return sqlhelpers.Insert(ctx, u.gen, token.FieldSet())
+	return u.crud.Insert(ctx, token)
 }
 
 func (u tokenRepo) Get(ctx context.Context, key core.TokenKey) (tkn *core.Token, err error) {
 	tkn = &core.Token{}
-	if err = sqlhelpers.Get(ctx, u.gen, key.FieldSet(), tkn.FieldSet()); err != nil {
+	if err = u.crud.Get(ctx, key, tkn); err != nil {
 		return
 	}
 	return
 }
 
 func (u tokenRepo) Delete(ctx context.Context, key core.TokenKey) (err error) {
-	return sqlhelpers.Delete(ctx, u.gen, key.FieldSet())
+	return u.crud.Delete(ctx, key)
 }
 
 func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core.Opts) (ls core.TokenList, err error) {
@@ -38,7 +38,7 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 	}
 
 	var args []interface{}
-	qbuf := u.gen.SelectStmt()
+	qbuf := u.crud.StmtGenerator().SelectStmt()
 
 	switch typ := filt.(type) {
 	case core.FilterTokenAll:
@@ -46,7 +46,7 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 		fmt.Fprintf(qbuf, " WHERE state_id = '%s'", string(typ.StateId))
 
 	case *core.FilterTokenKeyIn:
-		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.gen.KeyLen()
+		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.crud.StmtGenerator().KeyLen()
 		args = make([]interface{}, total*keyLen)
 		for i, j := 0, 0; i < len(kls); i, j = i+1, j+keyLen {
 			k := kls[i].FieldSet().Vals()
@@ -69,7 +69,7 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 		return
 	}
 
-	if err = sqlhelpers.Select(ctx, &ls, qbuf.String(), args...); err != nil {
+	if err = u.crud.Select(ctx, &ls, qbuf.String(), args); err != nil {
 		return
 	}
 	return
@@ -84,7 +84,7 @@ func (u tokenRepo) Update(ctx context.Context, key core.TokenKey, tkn *core.Toke
 
 	tkn.UpdatedAt = time.Now()
 
-	isEmpty, err := sqlhelpers.Update(ctx, u.gen, key.FieldSet(), dbTkn.FieldSet(), tkn.FieldSet())
+	isEmpty, err := u.crud.Update(ctx, key, dbTkn, tkn)
 	if err != nil {
 		return
 	}

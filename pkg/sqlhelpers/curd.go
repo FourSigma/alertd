@@ -7,45 +7,60 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func Insert(ctx context.Context, gen *StmtGenerator, fs util.FieldSet) (err error) {
+func NewCRUD(g StmtGenerator, hErr func(error) error) CRUD {
+	return CRUD{
+		gen:       g,
+		handleErr: hErr,
+	}
+}
+
+type CRUD struct {
+	gen       StmtGenerator
+	handleErr func(error) error
+}
+
+func (c CRUD) StmtGenerator() StmtGenerator {
+	return c.gen
+}
+func (c CRUD) Insert(ctx context.Context, fs util.FieldSetter) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return err
+		return c.handleErr(err)
 	}
-	fmt.Println(gen.InsertStmt())
-	if err = db.QueryRowxContext(ctx, gen.InsertStmt(), fs.Vals()...).Scan(fs.Ptrs()...); err != nil {
-		return
+	fmt.Println(c.gen.InsertStmt())
+	if err = db.QueryRowxContext(ctx, c.gen.InsertStmt(), fs.FieldSet().Vals()...).Scan(fs.FieldSet().Ptrs()...); err != nil {
+		return c.handleErr(err)
 	}
 	return
 }
 
-func Get(ctx context.Context, gen *StmtGenerator, key util.FieldSet, dest util.FieldSet) (err error) {
+func (c CRUD) Get(ctx context.Context, key util.FieldSetter, dest util.FieldSetter) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return err
+		return c.handleErr(err)
 	}
 
-	fmt.Println(gen.GetStmt())
-	if err = db.QueryRowxContext(ctx, gen.GetStmt(), key.Vals()...).Scan(dest.Ptrs()...); err != nil {
-		return
+	fmt.Println(c.gen.GetStmt())
+	if err = db.QueryRowxContext(ctx, c.gen.GetStmt(), key.FieldSet().Vals()...).Scan(dest.FieldSet().Ptrs()...); err != nil {
+		return c.handleErr(err)
 	}
 	return
 }
 
-func Delete(ctx context.Context, gen *StmtGenerator, key util.FieldSet) (err error) {
+func (c CRUD) Delete(ctx context.Context, key util.FieldSetter) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return err
+		return c.handleErr(err)
 	}
-	fmt.Println(gen.DeleteStmt())
-	if _, err = db.ExecContext(ctx, gen.DeleteStmt(), key.Vals()...); err != nil {
-		return
+	fmt.Println(c.gen.DeleteStmt())
+	if _, err = db.ExecContext(ctx, c.gen.DeleteStmt(), key.FieldSet().Vals()...); err != nil {
+		return c.handleErr(err)
 	}
 	return
 }
 
-func Update(ctx context.Context, gen *StmtGenerator, kFS util.FieldSet, dbFS util.FieldSet, mFS util.FieldSet) (isEmpty bool, err error) {
-	dfn, targs, isEmpty := UpdateFieldSetDiff(mFS, dbFS, kFS)
+func (c CRUD) Update(ctx context.Context, key util.FieldSetter, dbFS util.FieldSetter, mod util.FieldSetter) (isEmpty bool, err error) {
+	dfn, targs, isEmpty := UpdateFieldSetDiff(mod.FieldSet(), dbFS.FieldSet(), key.FieldSet())
 	if isEmpty {
 		isEmpty = true
 		return
@@ -53,26 +68,26 @@ func Update(ctx context.Context, gen *StmtGenerator, kFS util.FieldSet, dbFS uti
 
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return
+		return false, c.handleErr(err)
 	}
 
-	stmt := gen.UpdateStmt(dfn)
+	stmt := c.gen.UpdateStmt(dfn)
 	fmt.Println(stmt)
-	if err = db.QueryRowxContext(ctx, stmt, targs...).Scan(mFS.Ptrs()...); err != nil {
-		return
+	if err = db.QueryRowxContext(ctx, stmt, targs...).Scan(mod.FieldSet().Ptrs()...); err != nil {
+		return false, c.handleErr(err)
 	}
 	return
 }
 
-func Select(ctx context.Context, dest interface{}, query string, args ...interface{}) (err error) {
+func (c CRUD) Select(ctx context.Context, dest interface{}, query string, args []interface{}) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return err
+		return c.handleErr(err)
 	}
 
 	fmt.Println(query)
 	if err = db.SelectContext(ctx, dest, query, args...); err != nil {
-		return
+		return c.handleErr(err)
 	}
 	return
 }

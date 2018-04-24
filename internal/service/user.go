@@ -102,6 +102,26 @@ func (u UserService) AuthList(ctx context.Context, req *UserListRequest) (err er
 	return
 }
 
+func (u UserService) AuthGet(ctx context.Context, req *UserGetRequest) (err error) {
+	err = ErrorUnauthorized{}
+	return
+}
+
+func (u UserService) AuthDelete(ctx context.Context, req *UserDeleteRequest) (err error) {
+	err = ErrorUnauthorized{}
+	return
+}
+
+func (u UserService) AuthCreate(ctx context.Context, req *UserCreateRequest) (err error) {
+	err = ErrorUnauthorized{}
+	return
+}
+
+func (u UserService) AuthUpdate(ctx context.Context, req *UserUpdateRequest) (err error) {
+	err = ErrorUnauthorized{}
+	return
+}
+
 type ErrorUnauthorized struct{}
 
 func (e ErrorUnauthorized) Error() string {

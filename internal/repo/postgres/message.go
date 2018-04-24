@@ -11,26 +11,26 @@ import (
 )
 
 type messageRepo struct {
-	gen *sqlhelpers.StmtGenerator
+	crud sqlhelpers.CRUD
 }
 
 func (u messageRepo) Create(ctx context.Context, message *core.Message) (err error) {
 	message.Id = uuid.NewV4()
 	message.CreatedAt = time.Now()
 	message.UpdatedAt = time.Now()
-	return sqlhelpers.Insert(ctx, u.gen, message.FieldSet())
+	return u.crud.Insert(ctx, message)
 }
 
 func (u messageRepo) Get(ctx context.Context, key core.MessageKey) (msg *core.Message, err error) {
 	msg = &core.Message{}
-	if err = sqlhelpers.Get(ctx, u.gen, key.FieldSet(), msg.FieldSet()); err != nil {
+	if err = u.crud.Get(ctx, key, msg); err != nil {
 		return
 	}
 	return
 }
 
 func (u messageRepo) Delete(ctx context.Context, key core.MessageKey) (err error) {
-	return sqlhelpers.Delete(ctx, u.gen, key.FieldSet())
+	return u.crud.Delete(ctx, key)
 }
 
 func (u messageRepo) List(ctx context.Context, filt core.MessageFilter, opts ...core.Opts) (ls core.MessageList, err error) {
@@ -39,7 +39,7 @@ func (u messageRepo) List(ctx context.Context, filt core.MessageFilter, opts ...
 	}
 
 	var args []interface{}
-	qbuf := u.gen.SelectStmt()
+	qbuf := u.crud.StmtGenerator().SelectStmt()
 
 	switch typ := filt.(type) {
 
@@ -49,7 +49,7 @@ func (u messageRepo) List(ctx context.Context, filt core.MessageFilter, opts ...
 		fmt.Fprintf(qbuf, " WHERE type_id = '%s'", string(typ.TypeId))
 
 	case *core.FilterMessageKeyIn:
-		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.gen.KeyLen()
+		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.crud.StmtGenerator().KeyLen()
 		args = make([]interface{}, total*keyLen)
 
 		for i, j := 0, 0; i < len(kls); i, j = i+1, j+keyLen {
@@ -63,7 +63,7 @@ func (u messageRepo) List(ctx context.Context, filt core.MessageFilter, opts ...
 		return
 	}
 
-	if err = sqlhelpers.Select(ctx, &ls, qbuf.String(), args...); err != nil {
+	if err = u.crud.Select(ctx, &ls, qbuf.String(), args); err != nil {
 		return
 	}
 	return
@@ -77,7 +77,7 @@ func (u messageRepo) Update(ctx context.Context, key core.MessageKey, msg *core.
 
 	msg.UpdatedAt = time.Now()
 
-	isEmpty, err := sqlhelpers.Update(ctx, u.gen, key.FieldSet(), dbMsg.FieldSet(), msg.FieldSet())
+	isEmpty, err := u.crud.Update(ctx, key, dbMsg, msg)
 	if err != nil {
 		return
 	}

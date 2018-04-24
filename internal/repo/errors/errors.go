@@ -1,7 +1,9 @@
 package errors
 
-type NothingToUpdate struct{}
+import "errors"
 
-func (n NothingToUpdate) Error() string {
-	return "no fields to update"
-}
+var (
+	ErrorDoesNotExist    = errors.New("object does not exists")
+	ErrorAlreadyExists   = errors.New("object already exists")
+	ErrorUniqueViolation = errors.New("unique violations")
+)

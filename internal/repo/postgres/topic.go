@@ -12,26 +12,26 @@ import (
 )
 
 type topicRepo struct {
-	gen *sqlhelpers.StmtGenerator
+	crud sqlhelpers.CRUD
 }
 
 func (u topicRepo) Create(ctx context.Context, topic *core.Topic) (err error) {
 	topic.Id = uuid.NewV4()
 	topic.CreatedAt = time.Now()
 	topic.UpdatedAt = time.Now()
-	return sqlhelpers.Insert(ctx, u.gen, topic.FieldSet())
+	return u.crud.Insert(ctx, topic)
 }
 
 func (u topicRepo) Get(ctx context.Context, key core.TopicKey) (tp *core.Topic, err error) {
 	tp = &core.Topic{}
-	if err = sqlhelpers.Get(ctx, u.gen, key.FieldSet(), tp.FieldSet()); err != nil {
+	if err = u.crud.Get(ctx, key, tp); err != nil {
 		return
 	}
 	return
 }
 
 func (u topicRepo) Delete(ctx context.Context, key core.TopicKey) (err error) {
-	return sqlhelpers.Delete(ctx, u.gen, key.FieldSet())
+	return u.crud.Delete(ctx, key)
 }
 
 func (u topicRepo) List(ctx context.Context, filt core.TopicFilter, opts ...core.Opts) (ls core.TopicList, err error) {
@@ -40,13 +40,13 @@ func (u topicRepo) List(ctx context.Context, filt core.TopicFilter, opts ...core
 	}
 
 	var args []interface{}
-	qbuf := u.gen.SelectStmt()
+	qbuf := u.crud.StmtGenerator().SelectStmt()
 
 	switch typ := filt.(type) {
 	case core.FilterTopicAll:
 
 	case *core.FilterTopicKeyIn:
-		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.gen.KeyLen()
+		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.crud.StmtGenerator().KeyLen()
 		args = make([]interface{}, total*keyLen)
 		for i, j := 0, 0; i < len(kls); i, j = i+1, j+keyLen {
 			k := kls[i].FieldSet().Vals()
@@ -69,7 +69,7 @@ func (u topicRepo) List(ctx context.Context, filt core.TopicFilter, opts ...core
 		return
 	}
 
-	if err = sqlhelpers.Select(ctx, &ls, qbuf.String(), args...); err != nil {
+	if err = u.crud.Select(ctx, &ls, qbuf.String(), args); err != nil {
 		return
 	}
 	return
@@ -84,7 +84,7 @@ func (u topicRepo) Update(ctx context.Context, key core.TopicKey, tp *core.Topic
 
 	tp.UpdatedAt = time.Now()
 
-	isEmpty, err := sqlhelpers.Update(ctx, u.gen, key.FieldSet(), dbTp.FieldSet(), tp.FieldSet())
+	isEmpty, err := u.crud.Update(ctx, key, dbTp, tp)
 	if err != nil {
 		return
 	}

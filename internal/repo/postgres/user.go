@@ -12,26 +12,26 @@ import (
 )
 
 type userRepo struct {
-	gen *sqlhelpers.StmtGenerator
+	crud sqlhelpers.CRUD
 }
 
 func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {
 	user.Id = uuid.NewV4()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
-	return sqlhelpers.Insert(ctx, u.gen, user.FieldSet())
+	return u.crud.Insert(ctx, user)
 }
 
 func (u userRepo) Get(ctx context.Context, key core.UserKey) (usr *core.User, err error) {
 	usr = &core.User{}
-	if err = sqlhelpers.Get(ctx, u.gen, key.FieldSet(), usr.FieldSet()); err != nil {
+	if err = u.crud.Get(ctx, key, usr); err != nil {
 		return
 	}
 	return
 }
 
 func (u userRepo) Delete(ctx context.Context, key core.UserKey) (err error) {
-	return sqlhelpers.Delete(ctx, u.gen, key.FieldSet())
+	return u.crud.Delete(ctx, key)
 }
 
 func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.Opts) (ls core.UserList, err error) {
@@ -40,7 +40,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 	}
 
 	var args []interface{}
-	qbuf := u.gen.SelectStmt()
+	qbuf := u.crud.StmtGenerator().SelectStmt()
 
 	switch typ := filt.(type) {
 
@@ -50,7 +50,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 		fmt.Fprintf(qbuf, " WHERE state_id = '%s'", string(typ.StateId))
 
 	case *core.FilterUserKeyIn:
-		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.gen.KeyLen()
+		kls, total, keyLen := typ.KeyList, len(typ.KeyList), u.crud.StmtGenerator().KeyLen()
 		args = make([]interface{}, total*keyLen)
 
 		for i, j := 0, 0; i < len(kls); i, j = i+1, j+keyLen {
@@ -64,7 +64,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 		return
 	}
 
-	if err = sqlhelpers.Select(ctx, &ls, qbuf.String(), args...); err != nil {
+	if err = u.crud.Select(ctx, &ls, qbuf.String(), args); err != nil {
 		return
 	}
 	return
@@ -78,7 +78,7 @@ func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) 
 
 	usr.UpdatedAt = time.Now()
 
-	isEmpty, err := sqlhelpers.Update(ctx, u.gen, key.FieldSet(), dbUsr.FieldSet(), usr.FieldSet())
+	isEmpty, err := u.crud.Update(ctx, key, dbUsr, usr)
 	if err != nil {
 		return
 	}

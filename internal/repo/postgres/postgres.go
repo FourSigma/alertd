@@ -28,25 +28,29 @@ func AddRepoContext(ctx context.Context) context.Context {
 }
 
 func NewUserRepo() userRepo {
+	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.User{}, core.UserKey{})
 	return userRepo{
-		gen: sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.User{}, core.UserKey{}),
+		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
 	}
 }
 
 func NewTopicRepo() topicRepo {
+	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Topic{}, core.TopicKey{})
 	return topicRepo{
-		gen: sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Topic{}, core.TopicKey{}),
+		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
 	}
 }
 
 func NewMessageRepo() messageRepo {
+	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Message{}, core.MessageKey{})
 	return messageRepo{
-		gen: sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Message{}, core.MessageKey{}),
+		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
 	}
 }
 
 func NewTokenRepo() tokenRepo {
+	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Token{}, core.TokenKey{})
 	return tokenRepo{
-		gen: sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Token{}, core.TokenKey{}),
+		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
 	}
 }
