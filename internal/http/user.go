@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/FourSigma/alertd/internal/core"
@@ -68,6 +69,7 @@ func (u UserResource) Update(rw http.ResponseWriter, r *http.Request) {
 	key := r.Context().Value(CtxUserId).(core.UserKey)
 	req := &service.UserUpdateRequest{Key: key}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		fmt.Println(err)
 		utilhttp.HandleError(rw, utilhttp.ErrorJSONDecoding, err)
 		return
 	}

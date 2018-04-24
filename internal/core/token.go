@@ -64,6 +64,7 @@ type TokenKey struct {
 func (u TokenKey) IsValid() error {
 	return nil
 }
+
 func (u TokenKey) FieldSet() util.FieldSet {
 	return util.NewFieldSet("TokenKey",
 		util.NewField("UserId", u.UserId, &u.UserId, false),

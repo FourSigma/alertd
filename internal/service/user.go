@@ -64,11 +64,11 @@ func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *
 	return
 }
 func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *UserUpdateResponse, err error) {
-	resp = &UserUpdateResponse{Data: req.User}
 	if err = u.usrRepo.Update(ctx, req.Key, &req.User); err != nil {
 		fmt.Println(err)
 		return
 	}
+	resp = &UserUpdateResponse{Data: req.User}
 	return
 }
 

@@ -72,6 +72,7 @@ func (u userRepo) List(ctx context.Context, filt core.UserFilter, opts ...core.O
 func (u userRepo) Update(ctx context.Context, key core.UserKey, usr *core.User) (err error) {
 	usr.UpdatedAt = time.Now()
 	if err = u.crud.Update(ctx, key, usr); err != nil {
+		fmt.Println(err)
 		return
 	}
 	return
