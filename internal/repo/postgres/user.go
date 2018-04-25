@@ -7,12 +7,15 @@ import (
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
+	log "github.com/Sirupsen/logrus"
 	_ "github.com/lib/pq"
+
 	uuid "github.com/satori/go.uuid"
 )
 
 type userRepo struct {
 	crud sqlhelpers.CRUD
+	log  *log.Logger
 }
 
 func (u userRepo) Create(ctx context.Context, user *core.User) (err error) {

@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/Sirupsen/logrus"
+  packages = ["."]
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
+
+[[projects]]
   name = "github.com/go-chi/chi"
   packages = [
     ".",
@@ -35,12 +41,6 @@
   version = "v1.2.0"
 
 [[projects]]
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -62,6 +62,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "86cc1319f301df62df82bc9f81f86ef977da43dbd53eb59d4a1a3259406618a2"
+  inputs-digest = "e60b3aedca6457c292848ed4892b9695e2eef74d0d99cd5fc629641b004ee48c"
   solver-name = "gps-cdcl"
   solver-version = 1
