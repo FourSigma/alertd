@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/FourSigma/alertd/internal/core"
+	"github.com/FourSigma/alertd/internal/repo"
 )
 
 type TokenCreateRequest struct {
@@ -45,18 +46,18 @@ type TokenListResponse struct {
 }
 
 type TokenService struct {
-	tknRepo core.TokenRepo
+	repo repo.Datastore
 }
 
 func (u TokenService) Create(ctx context.Context, req *TokenCreateRequest) (resp *TokenCreateResponse, err error) {
-	if err = u.tknRepo.Create(ctx, req.Data); err != nil {
+	if err = u.repo.Token.Create(ctx, req.Data); err != nil {
 		return
 	}
 	resp = &TokenCreateResponse{Data: req.Data}
 	return
 }
 func (u TokenService) Update(ctx context.Context, req *TokenUpdateRequest) (resp *TokenUpdateResponse, err error) {
-	if err = u.tknRepo.Update(ctx, req.Key, req.Data); err != nil {
+	if err = u.repo.Token.Update(ctx, req.Key, req.Data); err != nil {
 		return
 	}
 	resp = &TokenUpdateResponse{Data: req.Data}
@@ -64,7 +65,7 @@ func (u TokenService) Update(ctx context.Context, req *TokenUpdateRequest) (resp
 }
 
 func (u TokenService) Delete(ctx context.Context, req *TokenDeleteRequest) (resp *TokenDeleteResponse, err error) {
-	if err = u.tknRepo.Delete(ctx, req.Key); err != nil {
+	if err = u.repo.Token.Delete(ctx, req.Key); err != nil {
 		return
 	}
 	resp = &TokenDeleteResponse{Key: req.Key}
@@ -73,7 +74,7 @@ func (u TokenService) Delete(ctx context.Context, req *TokenDeleteRequest) (resp
 
 func (u TokenService) Get(ctx context.Context, req *TokenGetRequest) (resp *TokenGetResponse, err error) {
 	resp = &TokenGetResponse{}
-	if resp.Data, err = u.tknRepo.Get(ctx, req.Key); err != nil {
+	if resp.Data, err = u.repo.Token.Get(ctx, req.Key); err != nil {
 		return
 	}
 	return
@@ -81,7 +82,7 @@ func (u TokenService) Get(ctx context.Context, req *TokenGetRequest) (resp *Toke
 
 func (u TokenService) List(ctx context.Context, req *TokenListRequest) (resp *TokenListResponse, err error) {
 	var ds []*core.Token
-	if ds, err = u.tknRepo.List(ctx, req.Filter, req.Opts...); err != nil {
+	if ds, err = u.repo.Token.List(ctx, req.Filter, req.Opts...); err != nil {
 		return
 	}
 	resp = &TokenListResponse{Data: ds}

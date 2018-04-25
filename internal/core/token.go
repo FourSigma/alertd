@@ -20,11 +20,11 @@ type TokenRepo interface {
 //Tokens are unique
 type TokenStateId string
 type Token struct {
-	UserId    uuid.UUID
-	Token     string
-	StateId   TokenStateId
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	UserId    uuid.UUID    `json:"userId,omitempty" db:"user_id"`
+	Token     string       `json:"token,omitempty" db:"token"`
+	StateId   TokenStateId `json:"stateId,omitempty" db:"state_id"`
+	CreatedAt time.Time    `json:"createdAt,omitempty" db:"created_at"`
+	UpdatedAt time.Time    `json:"updatedAt,omitempty" db:"updated_at"`
 
 	User *User
 }

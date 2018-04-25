@@ -34,7 +34,7 @@ func (f FilterUserKeyIn) Valid() (err error) {
 }
 
 func (f *FilterUserKeyIn) OK(u *User) (ok bool) {
-	if f.cache != nil {
+	if f.cache == nil {
 		f.cache = map[UserKey]struct{}{}
 		for _, v := range f.KeyList {
 			f.cache[v] = struct{}{}

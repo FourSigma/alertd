@@ -19,6 +19,31 @@ type FilterTokenByStateId struct {
 func (_ FilterTokenByStateId) OK(u *Token) bool { return u.StateId == u.StateId }
 func (_ FilterTokenByStateId) Valid() error     { return nil }
 
+type FilterTokenIn struct {
+	TokenList []string
+
+	cache map[string]struct{}
+}
+
+func (f *FilterTokenIn) Valid() (err error) {
+	if len(f.TokenList) == 0 {
+		err = errors.New("Invalid FilterTokenIn -- KeyList is empty")
+		return
+	}
+	return nil
+}
+
+func (f *FilterTokenIn) OK(u *Token) (ok bool) {
+	if f.cache != nil {
+		f.cache = map[string]struct{}{}
+		for _, v := range f.TokenList {
+			f.cache[v] = struct{}{}
+		}
+	}
+	_, ok = f.cache[u.Token]
+	return
+}
+
 type FilterTokenKeyIn struct {
 	KeyList []TokenKey
 
@@ -34,7 +59,7 @@ func (f *FilterTokenKeyIn) Valid() (err error) {
 }
 
 func (f *FilterTokenKeyIn) OK(u *Token) (ok bool) {
-	if f.cache != nil {
+	if f.cache == nil {
 		f.cache = map[TokenKey]struct{}{}
 		for _, v := range f.KeyList {
 			f.cache[v] = struct{}{}

@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/FourSigma/alertd/internal/core"
+	"github.com/FourSigma/alertd/internal/repo"
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
@@ -48,7 +50,7 @@ type UserListResponse struct {
 }
 
 type UserService struct {
-	usrRepo core.UserRepo
+	repo repo.Datastore
 }
 
 func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *UserCreateResponse, err error) {
@@ -56,7 +58,7 @@ func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *
 	if err != nil {
 		return
 	}
-	if err = u.usrRepo.Create(ctx, &req.User); err != nil {
+	if err = u.repo.User.Create(ctx, &req.User); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -64,7 +66,7 @@ func (u UserService) Create(ctx context.Context, req *UserCreateRequest) (resp *
 	return
 }
 func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *UserUpdateResponse, err error) {
-	if err = u.usrRepo.Update(ctx, req.Key, &req.User); err != nil {
+	if err = u.repo.User.Update(ctx, req.Key, &req.User); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -73,7 +75,7 @@ func (u UserService) Update(ctx context.Context, req *UserUpdateRequest) (resp *
 }
 
 func (u UserService) Delete(ctx context.Context, req *UserDeleteRequest) (resp *UserDeleteResponse, err error) {
-	if err = u.usrRepo.Delete(ctx, req.Key); err != nil {
+	if err = u.repo.User.Delete(ctx, req.Key); err != nil {
 		return
 	}
 	resp = &UserDeleteResponse{Key: req.Key}
@@ -82,7 +84,7 @@ func (u UserService) Delete(ctx context.Context, req *UserDeleteRequest) (resp *
 
 func (u UserService) Get(ctx context.Context, req *UserGetRequest) (resp *UserGetResponse, err error) {
 	var d core.User
-	if d, err = u.usrRepo.Get(ctx, req.Key); err != nil {
+	if d, err = u.repo.User.Get(ctx, req.Key); err != nil {
 		return
 	}
 	resp = &UserGetResponse{Data: d}
@@ -91,12 +93,29 @@ func (u UserService) Get(ctx context.Context, req *UserGetRequest) (resp *UserGe
 
 func (u UserService) List(ctx context.Context, req *UserListRequest) (resp *UserListResponse, err error) {
 	var ds []*core.User
-	if ds, err = u.usrRepo.List(ctx, req.Filter, req.Opts...); err != nil {
+	if ds, err = u.repo.User.List(ctx, req.Filter, req.Opts...); err != nil {
 		return
 	}
 	resp = &UserListResponse{Data: ds}
 	return
 }
+func (u UserService) GetUserFromToken(ctx context.Context, token string) (usr core.User, err error) {
+	var ds core.TokenList
+	if ds, err = u.repo.Token.List(ctx, &core.FilterTokenIn{TokenList: []string{token}}); err != nil {
+		return
+	}
+	if len(ds) > 1 || len(ds) == 0 {
+		err = errors.New("zero or multiple users for this token")
+		return
+	}
+
+	if usr, err = u.repo.User.Get(ctx, ds[0].UserKey()); err != nil {
+		return
+	}
+	return
+
+}
+
 func (u UserService) AuthList(ctx context.Context, req *UserListRequest) (err error) {
 	err = ErrorUnauthorized{}
 	return

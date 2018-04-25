@@ -26,7 +26,7 @@ func TopicCtx(next http.Handler) http.Handler {
 }
 
 type TopicResource struct {
-	topic *service.TopicService
+	topic service.TopicService
 }
 
 func (u TopicResource) Create(rw http.ResponseWriter, r *http.Request) {
@@ -80,4 +80,6 @@ func (u TopicResource) Update(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u TopicResource) Index(rw http.ResponseWriter, r *http.Request) {
+	//TODO temp
+	utilhttp.JSONResponse(rw, http.StatusOK, &utilhttp.Response{Data: r.Context().Value(CtxUserEntity)})
 }

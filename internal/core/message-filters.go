@@ -34,7 +34,7 @@ func (f *FilterMessageKeyIn) Valid() (err error) {
 }
 
 func (f *FilterMessageKeyIn) OK(u *Message) (ok bool) {
-	if f.cache != nil {
+	if f.cache == nil {
 		f.cache = map[MessageKey]struct{}{}
 		for _, v := range f.KeyList {
 			f.cache[v] = struct{}{}

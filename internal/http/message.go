@@ -26,7 +26,7 @@ func MessageCtx(next http.Handler) http.Handler {
 }
 
 type MessageResource struct {
-	message *service.MessageService
+	message service.MessageService
 }
 
 func (u MessageResource) Create(rw http.ResponseWriter, r *http.Request) {

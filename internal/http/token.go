@@ -1,32 +1,16 @@
 package http
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/internal/service"
 	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
-	"github.com/go-chi/chi"
 )
 
-func TokenCtx(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		usrKey := r.Context().Value(CtxUserId).(core.UserKey)
-
-		tokenId := chi.URLParam(r, "tokenId")
-		if tokenId == "" {
-			utilhttp.HandleError(w, utilhttp.ErrorDecodingPathTokenId, nil)
-			return
-		}
-		ctx := context.WithValue(r.Context(), CtxTokenId, core.TokenKey{Token: tokenId, UserId: usrKey.Id})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 type TokenResource struct {
-	token *service.TokenService
+	token service.TokenService
 }
 
 func (u TokenResource) Create(rw http.ResponseWriter, r *http.Request) {

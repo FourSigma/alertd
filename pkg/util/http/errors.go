@@ -25,6 +25,8 @@ const (
 	ErrorUpdatingResource      errMsg = "[Resource] error updating resource"
 	ErrorGetResource           errMsg = "[Resource] error geting resource"
 	ErrorParsingQueryParams    errMsg = "[Query] error parsing query parameters"
+	ErrorInvalidToken          errMsg = "[Token] invalid token"
+	ErrorTokenRequired         errMsg = "[Token] token header is empty"
 )
 
 var errCodeMap = map[errMsg]int{
@@ -40,6 +42,8 @@ var errCodeMap = map[errMsg]int{
 	ErrorUpdatingResource:      http.StatusInternalServerError,
 	ErrorGetResource:           http.StatusInternalServerError,
 	ErrorParsingQueryParams:    http.StatusBadRequest,
+	ErrorInvalidToken:          http.StatusForbidden,
+	ErrorTokenRequired:         http.StatusBadRequest,
 }
 
 type errorMsg struct {

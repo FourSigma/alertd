@@ -27,7 +27,7 @@ func UserCtx(next http.Handler) http.Handler {
 }
 
 type UserResource struct {
-	user *service.UserService
+	user service.UserService
 }
 
 func (u UserResource) Create(rw http.ResponseWriter, r *http.Request) {

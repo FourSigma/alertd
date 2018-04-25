@@ -52,7 +52,7 @@ func (f *FilterTopicUserKeyIn) Valid() (err error) {
 }
 
 func (f *FilterTopicUserKeyIn) OK(u *Topic) (ok bool) {
-	if f.cache != nil {
+	if f.cache == nil {
 		f.cache = map[UserKey]struct{}{}
 		for _, v := range f.KeyList {
 			f.cache[v] = struct{}{}

@@ -51,7 +51,7 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 			k := kls[i].FieldSet().Vals()
 			args[j], args[j+1] = k[0], k[1]
 		}
-		fmt.Fprintf(qbuf, " WHERE (id) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
+		fmt.Fprintf(qbuf, " WHERE (user_id, token) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
 
 	case *core.FilterTokenUserKeyIn:
 		kls, total, keyLen := typ.KeyList, len(typ.KeyList), len((core.UserKey{}).FieldSet().Vals())
@@ -61,7 +61,14 @@ func (u tokenRepo) List(ctx context.Context, filt core.TokenFilter, opts ...core
 			k := kls[i].FieldSet().Vals()
 			args[j], args[j+1] = k[0], k[1]
 		}
-		fmt.Fprintf(qbuf, " WHERE (id) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
+		fmt.Fprintf(qbuf, " WHERE (user_id) IN %s ", sqlhelpers.PlaceholderKeyIn(total, keyLen))
+	case *core.FilterTokenIn:
+		tls, total := typ.TokenList, len(typ.TokenList)
+		args = make([]interface{}, total)
+		for i := 0; i < total; i = i + 1 {
+			args[i] = tls[i]
+		}
+		fmt.Fprintf(qbuf, " WHERE (token) IN %s ", sqlhelpers.PlaceholderKeyIn(total, 1))
 
 	default:
 		err = fmt.Errorf("Unknown TokenFilter Type %#v", typ)
