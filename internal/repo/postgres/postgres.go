@@ -2,10 +2,10 @@ package postgres
 
 import (
 	"context"
-	"log"
 
 	"github.com/FourSigma/alertd/internal/core"
 	"github.com/FourSigma/alertd/pkg/sqlhelpers"
+	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -27,30 +27,30 @@ func AddRepoContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, sqlhelpers.CtxDbKey, sqlDB)
 }
 
-func NewUserRepo() userRepo {
+func NewUserRepo(log *log.Logger) userRepo {
 	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.User{}, core.UserKey{})
 	return userRepo{
-		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
+		crud: sqlhelpers.NewCRUD(log, gen, HandlePSQLError),
 	}
 }
 
-func NewTopicRepo() topicRepo {
+func NewTopicRepo(log *log.Logger) topicRepo {
 	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Topic{}, core.TopicKey{})
 	return topicRepo{
-		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
+		crud: sqlhelpers.NewCRUD(log, gen, HandlePSQLError),
 	}
 }
 
-func NewMessageRepo() messageRepo {
+func NewMessageRepo(log *log.Logger) messageRepo {
 	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Message{}, core.MessageKey{})
 	return messageRepo{
-		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
+		crud: sqlhelpers.NewCRUD(log, gen, HandlePSQLError),
 	}
 }
 
-func NewTokenRepo() tokenRepo {
+func NewTokenRepo(log *log.Logger) tokenRepo {
 	gen := sqlhelpers.NewStmtGenerator(PostgresSchemaPrefix, &core.Token{}, core.TokenKey{})
 	return tokenRepo{
-		crud: sqlhelpers.NewCRUD(gen, HandlePSQLError),
+		crud: sqlhelpers.NewCRUD(log, gen, HandlePSQLError),
 	}
 }

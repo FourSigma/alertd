@@ -1,27 +1,30 @@
 package service
 
-import "github.com/FourSigma/alertd/internal/repo/postgres"
+import (
+	"github.com/FourSigma/alertd/internal/repo/postgres"
+	log "github.com/Sirupsen/logrus"
+)
 
-func NewUserService() *UserService {
+func NewUserService(l *log.Logger) *UserService {
 	return &UserService{
-		usrRepo: postgres.NewUserRepo(),
+		usrRepo: postgres.NewUserRepo(l),
 	}
 }
 
-func NewMessageService() *MessageService {
+func NewMessageService(l *log.Logger) *MessageService {
 	return &MessageService{
-		msgRepo: postgres.NewMessageRepo(),
+		msgRepo: postgres.NewMessageRepo(l),
 	}
 }
 
-func NewTopicService() *TopicService {
+func NewTopicService(l *log.Logger) *TopicService {
 	return &TopicService{
-		tpRepo: postgres.NewTopicRepo(),
+		tpRepo: postgres.NewTopicRepo(l),
 	}
 }
 
-func NewTokenService() *TokenService {
+func NewTokenService(l *log.Logger) *TokenService {
 	return &TokenService{
-		tknRepo: postgres.NewTokenRepo(),
+		tknRepo: postgres.NewTokenRepo(l),
 	}
 }

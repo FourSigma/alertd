@@ -2,35 +2,55 @@ package sqlhelpers
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/FourSigma/alertd/pkg/util"
+	log "github.com/Sirupsen/logrus"
 )
 
-func NewCRUD(g StmtGenerator, hErr func(error) error) CRUD {
+func NewCRUD(l *log.Logger, g StmtGenerator, hErr func(error) error) CRUD {
 	return CRUD{
 		gen:       g,
 		handleErr: hErr,
+		log: l.WithFields(
+			log.Fields{
+				"layer": "repo",
+				"type":  strings.ToLower(g.table),
+			},
+		),
 	}
 }
 
 type CRUD struct {
 	gen       StmtGenerator
 	handleErr func(error) error
+	log       *log.Entry
 }
 
 func (c CRUD) StmtGenerator() StmtGenerator {
 	return c.gen
 }
-func (c CRUD) Insert(ctx context.Context, fs util.Entity) (err error) {
+func (c CRUD) Insert(ctx context.Context, e util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
 		return c.handleErr(err)
 	}
-	fmt.Println(c.gen.InsertStmt())
-	if err = db.QueryRowxContext(ctx, c.gen.InsertStmt(), fs.FieldSet().Vals()...).Scan(fs.FieldSet().Ptrs()...); err != nil {
+	stmt := c.gen.InsertStmt()
+	fs := e.FieldSet()
+
+	c.log.WithFields(log.Fields{
+		"sql": stmt,
+	}).Info("SQL Statement")
+
+	if err = db.QueryRowxContext(ctx, stmt, fs.Vals()...).Scan(fs.Ptrs()...); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": fs.Vals(),
+		}).Error(err)
 		return c.handleErr(err)
 	}
+	c.log.WithFields(log.Fields{
+		"values": fs.Vals(),
+	}).Info("Successfully inserted")
 	return
 }
 
@@ -40,10 +60,21 @@ func (c CRUD) Get(ctx context.Context, key util.EntityKey, dest util.Entity) (er
 		return c.handleErr(err)
 	}
 
-	fmt.Println(c.gen.GetStmt())
-	if err = db.QueryRowxContext(ctx, c.gen.GetStmt(), key.FieldSet().Vals()...).Scan(dest.FieldSet().Ptrs()...); err != nil {
+	stmt := c.gen.GetStmt()
+
+	c.log.WithFields(log.Fields{
+		"sql": stmt,
+	}).Info("SQL Statement")
+
+	if err = db.QueryRowxContext(ctx, stmt, key.FieldSet().Vals()...).Scan(dest.FieldSet().Ptrs()...); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": key,
+		}).Error(err)
 		return c.handleErr(err)
 	}
+	c.log.WithFields(log.Fields{
+		"values": key,
+	}).Info("Obtained instance")
 	return
 }
 
@@ -52,10 +83,21 @@ func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 	if err != nil {
 		return c.handleErr(err)
 	}
-	fmt.Println(c.gen.DeleteStmt())
-	if _, err = db.ExecContext(ctx, c.gen.DeleteStmt(), key.FieldSet().Vals()...); err != nil {
+	stmt := c.gen.DeleteStmt()
+
+	c.log.WithFields(log.Fields{
+		"sql": stmt,
+	}).Info("SQL Statement")
+	if _, err = db.ExecContext(ctx, stmt, key.FieldSet().Vals()...); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": key,
+		}).Error(err)
 		return c.handleErr(err)
 	}
+	c.log.WithFields(log.Fields{
+		"values": key,
+	}).Info("Successfully deleted")
+
 	return
 }
 
@@ -68,6 +110,9 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 	//Get entity from database for comparison
 	dbEntity := mod.New()
 	if err = c.Get(ctx, key, dbEntity); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": key,
+		}).Error(err)
 		return
 	}
 
@@ -79,10 +124,19 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 	}
 
 	stmt := c.gen.UpdateStmt(dfn)
-	fmt.Println(stmt)
+	c.log.WithFields(log.Fields{
+		"sql": stmt,
+	}).Info("SQL Statement")
 	if err = db.QueryRowxContext(ctx, stmt, targs...).Scan(mod.FieldSet().Ptrs()...); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": targs,
+		}).Error(err)
 		return c.handleErr(err)
 	}
+	c.log.WithFields(log.Fields{
+		"values": targs,
+	}).Info("Successfully updated")
+
 	return
 }
 
@@ -92,8 +146,14 @@ func (c CRUD) Select(ctx context.Context, dest interface{}, query string, args [
 		return c.handleErr(err)
 	}
 
-	fmt.Println(query)
+	c.log.WithFields(log.Fields{
+		"sql": query,
+	}).Info("sql statement")
+
 	if err = db.SelectContext(ctx, dest, query, args...); err != nil {
+		c.log.WithFields(log.Fields{
+			"values": args,
+		}).Error(err)
 		return c.handleErr(err)
 	}
 	return

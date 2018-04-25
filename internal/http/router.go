@@ -2,12 +2,15 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/FourSigma/alertd/internal/repo/postgres"
 	"github.com/FourSigma/alertd/internal/service"
 	utilhttp "github.com/FourSigma/alertd/pkg/util/http"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type httpCtxKey string
@@ -26,20 +29,23 @@ func RepoCtx(next http.Handler) http.Handler {
 	})
 }
 
-func NewAPI(port string) *api {
+func NewAPI(port string, l *log.Logger) *api {
 	return &api{
 		User: &UserResource{
-			user: service.NewUserService(),
+			user: service.NewUserService(l),
 		},
 		Token: &TokenResource{
-			token: service.NewTokenService(),
+			token: service.NewTokenService(l),
 		},
 		Topic: &TopicResource{
-			topic: service.NewTopicService(),
+			topic: service.NewTopicService(l),
 		},
 		Message: &MessageResource{
-			message: service.NewMessageService(),
+			message: service.NewMessageService(l),
 		},
+		log: l.WithFields(log.Fields{
+			"layer": "api",
+		}),
 		r:    chi.NewRouter(),
 		port: port,
 	}
@@ -51,6 +57,8 @@ type api struct {
 	Topic   *TopicResource
 	Message *MessageResource
 
+	log *log.Entry
+
 	r    chi.Router
 	port string
 }
@@ -58,14 +66,46 @@ type api struct {
 func (u *api) Run() error {
 	return http.ListenAndServe(":"+u.port, u.routes())
 }
+
+func RequestLogger(l *log.Entry) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			t1 := time.Now()
+			defer func() {
+				entry := l.WithFields(log.Fields{
+					"method": r.Method,
+					"status": ww.Status(),
+					"bytes":  ww.BytesWritten(),
+					"time":   time.Since(t1),
+					"reqId":  middleware.GetReqID(r.Context()),
+				})
+				if ww.Status() >= 300 && ww.Status() < 500 {
+					entry.Warnf("%s %s", r.Method, r.URL.String())
+					return
+				}
+
+				if ww.Status() >= 500 {
+					entry.Errorf("%s %s", r.Method, r.URL.String())
+					return
+				}
+				entry.Infof("%s %s", r.Method, r.URL.String())
+			}()
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+
+}
+
 func (u *api) routes() chi.Router {
 	//Middleware
 	u.r.Use(
 		middleware.RequestID,
 		middleware.RealIP,
-		middleware.Logger,
 		middleware.Recoverer,
 		RepoCtx,
+		RequestLogger(u.log),
 	)
 	u.r.Route("/v1", func(r chi.Router) {
 		u.userRoutes(r)
