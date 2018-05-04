@@ -32,7 +32,7 @@ func BuildUpdateQuery(tn string, fs []string, ks []string) *bytes.Buffer {
 		}
 	}
 
-	fmt.Fprint(buf, ") RETURNING *")
+	fmt.Fprint(buf, ")")
 	return buf
 }
 

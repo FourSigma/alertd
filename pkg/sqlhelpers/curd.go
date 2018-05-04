@@ -8,10 +8,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func NewCRUD(l *log.Logger, g StmtGenerator, hErr func(error) error) CRUD {
+func NewCRUD(l *log.Logger, g StmtGenerator) CRUD {
 	return CRUD{
-		gen:       g,
-		handleErr: hErr,
+		gen: g,
 		log: l.WithFields(
 			log.Fields{
 				"layer": "repo",
@@ -22,9 +21,8 @@ func NewCRUD(l *log.Logger, g StmtGenerator, hErr func(error) error) CRUD {
 }
 
 type CRUD struct {
-	gen       StmtGenerator
-	handleErr func(error) error
-	log       *log.Entry
+	gen StmtGenerator
+	log *log.Entry
 }
 
 func (c CRUD) StmtGenerator() StmtGenerator {
@@ -33,7 +31,7 @@ func (c CRUD) StmtGenerator() StmtGenerator {
 func (c CRUD) Insert(ctx context.Context, e util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return c.handleErr(err)
+		return err
 	}
 	stmt := c.gen.InsertStmt()
 	fs := e.FieldSet()
@@ -46,7 +44,7 @@ func (c CRUD) Insert(ctx context.Context, e util.Entity) (err error) {
 		c.log.WithFields(log.Fields{
 			"values": fs.Vals(),
 		}).Error(err)
-		return c.handleErr(err)
+		return err
 	}
 	c.log.WithFields(log.Fields{
 		"values": fs.Vals(),
@@ -57,7 +55,7 @@ func (c CRUD) Insert(ctx context.Context, e util.Entity) (err error) {
 func (c CRUD) Get(ctx context.Context, key util.EntityKey, dest util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return c.handleErr(err)
+		return err
 	}
 
 	stmt := c.gen.GetStmt()
@@ -70,7 +68,7 @@ func (c CRUD) Get(ctx context.Context, key util.EntityKey, dest util.Entity) (er
 		c.log.WithFields(log.Fields{
 			"values": key,
 		}).Error(err)
-		return c.handleErr(err)
+		return err
 	}
 	c.log.WithFields(log.Fields{
 		"values": key,
@@ -81,7 +79,7 @@ func (c CRUD) Get(ctx context.Context, key util.EntityKey, dest util.Entity) (er
 func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return c.handleErr(err)
+		return err
 	}
 	stmt := c.gen.DeleteStmt()
 
@@ -92,7 +90,7 @@ func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 		c.log.WithFields(log.Fields{
 			"values": key,
 		}).Error(err)
-		return c.handleErr(err)
+		return err
 	}
 	c.log.WithFields(log.Fields{
 		"values": key,
@@ -104,7 +102,7 @@ func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return c.handleErr(err)
+		return err
 	}
 
 	//Get entity from database for comparison
@@ -131,7 +129,7 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 		c.log.WithFields(log.Fields{
 			"values": targs,
 		}).Error(err)
-		return c.handleErr(err)
+		return err
 	}
 	c.log.WithFields(log.Fields{
 		"values": targs,
@@ -143,7 +141,7 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 func (c CRUD) Select(ctx context.Context, dest interface{}, query string, args []interface{}) (err error) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return c.handleErr(err)
+		return err
 	}
 
 	c.log.WithFields(log.Fields{
@@ -154,7 +152,7 @@ func (c CRUD) Select(ctx context.Context, dest interface{}, query string, args [
 		c.log.WithFields(log.Fields{
 			"values": args,
 		}).Error(err)
-		return c.handleErr(err)
+		return err
 	}
 	return
 }

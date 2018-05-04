@@ -41,29 +41,11 @@ type StmtGenerator struct {
 }
 
 const (
-	tmplInsertStmt = "INSERT INTO %s(%s) VALUES (%s) RETURNING *"
+	tmplInsertStmt = "INSERT INTO %s(%s) VALUES (%s) RETURNING %s"
 	tmplDeleteStmt = "DELETE FROM %s WHERE (%s) IN (%s)"
 	tmplGetStmt    = "SELECT %s FROM %s WHERE (%s) IN (%s)"
 	tmplSelectStmt = "SELECT * FROM %s"
 )
-
-func (g StmtGenerator) genAttributeStmt(tmpl string) *bytes.Buffer {
-	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmpl, g.table, g.JoinedColumnFields(), g.placeHolder(g.AttributeLen()))
-	return buf
-}
-
-func (g StmtGenerator) genGetStmt() *bytes.Buffer {
-	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmplGetStmt, g.JoinedColumnFields(), g.table, g.JoinedKeyFields(), g.placeHolder(g.KeyLen()))
-	return buf
-}
-
-func (g StmtGenerator) genKeyStmt(tmpl string) *bytes.Buffer {
-	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmpl, g.table, g.JoinedKeyFields(), g.placeHolder(g.KeyLen()))
-	return buf
-}
 
 func (g StmtGenerator) KeyLen() int {
 	return len(g.kfls)
@@ -88,15 +70,38 @@ func (g StmtGenerator) JoinedColumnFields() string {
 }
 
 func (g StmtGenerator) InsertStmt() string {
-	return g.genAttributeStmt(tmplInsertStmt).String()
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf,
+		tmplInsertStmt,
+		g.table,
+		g.JoinedColumnFields(),
+		g.placeHolder(g.AttributeLen()),
+		g.JoinedColumnFields(),
+	)
+	return buf.String()
 }
 
 func (g StmtGenerator) DeleteStmt() string {
-	return g.genKeyStmt(tmplDeleteStmt).String()
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf,
+		tmplDeleteStmt,
+		g.table,
+		g.JoinedKeyFields(),
+		g.placeHolder(g.KeyLen()),
+	)
+	return buf.String()
 }
 
 func (g StmtGenerator) GetStmt() string {
-	return g.genGetStmt().String()
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf,
+		tmplGetStmt,
+		g.JoinedColumnFields(),
+		g.table,
+		g.JoinedKeyFields(),
+		g.placeHolder(g.KeyLen()),
+	)
+	return buf.String()
 }
 
 func (g StmtGenerator) SelectStmt() *bytes.Buffer {
@@ -107,5 +112,7 @@ func (g StmtGenerator) SelectStmt() *bytes.Buffer {
 
 func (g StmtGenerator) UpdateStmt(dfn []string) string {
 	dfn = ModifyStringList(dfn, util.CamelCaseToUnderscore)
-	return BuildUpdateQuery(g.table, dfn, g.kfls).String()
+	buf := BuildUpdateQuery(g.table, dfn, g.kfls)
+	fmt.Fprintf(buf, " RETURNING %s", g.JoinedColumnFields())
+	return buf.String()
 }
