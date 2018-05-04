@@ -8,7 +8,7 @@ import (
 	"github.com/FourSigma/alertd/pkg/util"
 )
 
-func NewStmtGenerator(schema string, entity util.Entity, key util.EntityKey) StmtGenerator {
+func NewStmtGenerator(schema string, entity util.Entity, key util.EntityKey, pural bool) StmtGenerator {
 	fls, _, _ := entity.FieldSet().Args()
 	kfls, _, _ := key.FieldSet().Args()
 	table := entity.FieldSet().Name()
@@ -18,8 +18,14 @@ func NewStmtGenerator(schema string, entity util.Entity, key util.EntityKey) Stm
 	kfls = ModifyStringList(kfls, util.CamelCaseToUnderscore)
 	table = ModifyString(table, util.CamelCaseToUnderscore)
 
+	if schema != "" {
+		table = schema + "." + table
+	}
+	if pural {
+		table = table + "s"
+	}
 	return StmtGenerator{
-		table:       schema + "." + table + "s",
+		table:       table,
 		fls:         fls,
 		kfls:        kfls,
 		placeHolder: PostgresPlaceholder,
@@ -37,13 +43,19 @@ type StmtGenerator struct {
 const (
 	tmplInsertStmt = "INSERT INTO %s(%s) VALUES (%s) RETURNING *"
 	tmplDeleteStmt = "DELETE FROM %s WHERE (%s) IN (%s)"
-	tmplGetStmt    = "SELECT * FROM %s WHERE (%s) IN (%s)"
+	tmplGetStmt    = "SELECT %s FROM %s WHERE (%s) IN (%s)"
 	tmplSelectStmt = "SELECT * FROM %s"
 )
 
 func (g StmtGenerator) genAttributeStmt(tmpl string) *bytes.Buffer {
 	buf := &bytes.Buffer{}
-	fmt.Fprintf(buf, tmpl, g.table, g.JoinedAttributeFields(), g.placeHolder(g.AttributeLen()))
+	fmt.Fprintf(buf, tmpl, g.table, g.JoinedColumnFields(), g.placeHolder(g.AttributeLen()))
+	return buf
+}
+
+func (g StmtGenerator) genGetStmt() *bytes.Buffer {
+	buf := &bytes.Buffer{}
+	fmt.Fprintf(buf, tmplGetStmt, g.JoinedColumnFields(), g.table, g.JoinedKeyFields(), g.placeHolder(g.KeyLen()))
 	return buf
 }
 
@@ -63,7 +75,7 @@ func (g StmtGenerator) KeyFieldNames() []string {
 	return g.kfls
 }
 
-func (g StmtGenerator) AttributeFieldNames() []string {
+func (g StmtGenerator) ColumnFieldNames() []string {
 	return g.fls
 }
 
@@ -71,8 +83,8 @@ func (g StmtGenerator) JoinedKeyFields() string {
 	return strings.Join(g.KeyFieldNames(), ", ")
 }
 
-func (g StmtGenerator) JoinedAttributeFields() string {
-	return strings.Join(g.AttributeFieldNames(), ", ")
+func (g StmtGenerator) JoinedColumnFields() string {
+	return strings.Join(g.ColumnFieldNames(), ", ")
 }
 
 func (g StmtGenerator) InsertStmt() string {
@@ -84,7 +96,7 @@ func (g StmtGenerator) DeleteStmt() string {
 }
 
 func (g StmtGenerator) GetStmt() string {
-	return g.genKeyStmt(tmplGetStmt).String()
+	return g.genGetStmt().String()
 }
 
 func (g StmtGenerator) SelectStmt() *bytes.Buffer {
