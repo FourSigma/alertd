@@ -116,9 +116,13 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 
 	dfn, targs, isEmpty := UpdateFieldSetDiff(mod.FieldSet(), dbEntity.FieldSet(), key.FieldSet())
 	if isEmpty {
-		mod = dbEntity
-		//Assign NotModfiedError here
-		return
+		if err = c.Get(ctx, key, mod); err != nil {
+			c.log.WithFields(log.Fields{
+				"values": key,
+			}).Error(err)
+			return
+		}
+		return err
 	}
 
 	stmt := c.gen.UpdateStmt(dfn)

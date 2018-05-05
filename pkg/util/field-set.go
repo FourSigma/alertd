@@ -1,7 +1,8 @@
 package util
 
 import (
-	"fmt"
+	"errors"
+	"reflect"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -34,6 +35,7 @@ type FieldSetter interface {
 type Entity interface {
 	FieldSetter
 	New() Entity
+	Set(Entity) error
 }
 
 type Validator interface {
@@ -53,47 +55,92 @@ type Field struct {
 	canUpdate bool
 }
 
-func (f *Field) IsZero() bool {
+func (f Field) IsZero() bool {
 	switch val := f.value.(type) {
+
+	case uuid.UUID:
+		return uuid.Equal(val, uuid.Nil)
+
 	case time.Time:
 		return val.IsZero()
+
 	case *time.Time:
 		if val != nil {
 			return val.IsZero()
 		}
 		return val == nil
+
 	case Zeroer:
 		return val.IsZero()
+
 	case string:
 		return val == ""
+
 	case *string:
 		return val == nil
+
 	case uint8, uint32, uint16, uint64:
 		return val == 0
+
 	case int8, int32, int16, int64:
 		return val == 0
+
 	case float32, float64:
 		return val == 0.0
+
 	case *float32:
 		if val != nil {
 			return *val == 0.0
 		}
 		return val == nil
+
 	case *float64:
 		if val != nil {
 			return *val == 0.0
 		}
 		return val == nil
+
 	case []uint8, []uint32, []uint16, []uint64:
 		return val == nil
+
 	case *uint8, *uint32, *uint16, *uint64:
 		return val == nil
+
 	case *int8, *int32, *int16, *int64:
 		return val == nil
+
+	default:
+
+		// If none of the above works move onto reflection
+		// for named types.
+		// The HORROR!
+		typ := reflect.ValueOf(f.value)
+		//Switches for named type base types.
+		switch {
+
+		case typ.Type().ConvertibleTo(rUUID):
+			u := typ.Convert(rUUID).Interface().(uuid.UUID)
+			return uuid.Equal(u, uuid.Nil)
+
+		case typ.Type().ConvertibleTo(rString):
+			u := typ.Convert(rString).Interface().(string)
+			return u == ""
+
+		case typ.Type().ConvertibleTo(rInt64):
+			u := typ.Convert(rInt64).Interface().(int64)
+			return u == 0
+		}
+
 	}
 
 	return false
 }
+
+var (
+	rUUID   = reflect.TypeOf(uuid.UUID{})
+	rString = reflect.TypeOf(string(""))
+	rInt64  = reflect.TypeOf(int64(0))
+)
 
 type FieldSet struct {
 	name string
@@ -106,9 +153,10 @@ func (f FieldSet) Name() string {
 
 func (f FieldSet) Diff(cmp FieldSet) (diff FieldSet) {
 	diff = FieldSet{}
-	fs := cmp.Map()
+	diff.name = f.name
+	cmpMap := cmp.Map()
 	for _, v := range f.fls {
-		val, ok := fs[v.name]
+		val, ok := cmpMap[v.name]
 		if !ok {
 			continue
 		}
@@ -135,7 +183,6 @@ func (f FieldSet) Diff(cmp FieldSet) (diff FieldSet) {
 			}
 		}
 		diff.fls = append(diff.fls, v)
-		fmt.Println("NOT EQUAL", v.value, val, v.value == val)
 	}
 	return
 }
@@ -150,6 +197,44 @@ func (f FieldSet) Map() (m map[string]interface{}) {
 func (f *FieldSet) Add(nf Field) FieldSet {
 	f.fls = append(f.fls, nf)
 	return *f
+}
+
+func (f FieldSet) HasSameFields(fs FieldSet) bool {
+	for i, v := range fs.fls {
+
+		if !(f.fls[i].name == v.name) {
+			return false
+		}
+
+		if !(f.fls[i].pos == v.pos) {
+			return false
+		}
+
+	}
+	return true
+}
+
+func (f *FieldSet) Set(fs FieldSet) error {
+
+	switch {
+
+	case f.Name() != fs.Name():
+		return errors.New("base entities in fieldsets do not match: (names)")
+
+	case len(f.fls) != len(fs.fls):
+		return errors.New("base entities in fieldsets do not match: (field lengths)")
+
+	case f.HasSameFields(fs):
+		return errors.New("base entities in fieldsets do not match: (field lengths)")
+
+	default:
+		for i, v := range fs.fls {
+			f.fls[i].value = v.value
+			f.fls[i].ptr = v.ptr
+		}
+	}
+
+	return nil
 }
 
 func (f FieldSet) Args() (fl []string, vals []interface{}, ptrs []interface{}) {
@@ -200,20 +285,23 @@ func (f FieldSet) IsEmpty() bool {
 	return len(f.fls) == 0
 }
 
-func (f FieldSet) Filter(filter func(*Field) bool) (n FieldSet) {
-	if filter == nil {
+func (f FieldSet) Filter(filterList ...func(*Field) bool) (n FieldSet) {
+	if filterList == nil || len(filterList) == 0 {
 		return f
 	}
 	n = FieldSet{}
-	for _, v := range f.fls {
-		if !filter(&v) {
-			continue
+	n.name = f.name
+	for _, ok := range filterList {
+		for _, v := range f.fls {
+			if !ok(&v) {
+				continue
+			}
+			n.fls = append(n.fls, v)
 		}
-		n.fls = append(n.fls, v)
 	}
 	return
 }
-func UpdateableFields(f *Field) bool {
+func UpdateableField(f *Field) bool {
 	return f.canUpdate && !f.IsZero()
 }
 
