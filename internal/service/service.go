@@ -11,14 +11,12 @@ func GetService(l *log.Logger) ServiceManager {
 	if glbSvc != nil {
 		return *glbSvc
 	}
-
 	svc := &ServiceManager{
 		User:    newUserService(l),
 		Topic:   newTopicService(l),
 		Message: newMessageService(l),
 		Token:   newTokenService(l),
 	}
-
 	return *svc
 }
 

@@ -82,7 +82,7 @@ func (f Field) IsZero() bool {
 	case uint8, uint32, uint16, uint64:
 		return val == 0
 
-	case int8, int32, int16, int64:
+	case int, int8, int32, int16, int64:
 		return val == 0
 
 	case float32, float64:
@@ -106,7 +106,7 @@ func (f Field) IsZero() bool {
 	case *uint8, *uint32, *uint16, *uint64:
 		return val == nil
 
-	case *int8, *int32, *int16, *int64:
+	case *int, *int8, *int32, *int16, *int64:
 		return val == nil
 
 	default:

@@ -8,7 +8,13 @@ import (
 )
 
 type Datastore struct {
-	User    core.UserRepo
+	User struct {
+		core.UserRepo
+		Reslove struct {
+			Tokens func(ls core.UserList, opts ...core.Opts) error
+			Topics func(ls core.UserList, opts ...core.Opts) error
+		}
+	}
 	Token   core.TokenRepo
 	Message core.MessageRepo
 	Topic   core.TopicRepo
@@ -22,11 +28,11 @@ func GetDatastore(l *log.Logger) Datastore {
 	}
 
 	glbDS := &Datastore{
-		User:    postgres.NewUserRepo(l),
 		Token:   postgres.NewTokenRepo(l),
 		Message: postgres.NewMessageRepo(l),
 		Topic:   postgres.NewTopicRepo(l),
 	}
+	glbDS.User.UserRepo = postgres.NewUserRepo(l)
 
 	return *glbDS
 }

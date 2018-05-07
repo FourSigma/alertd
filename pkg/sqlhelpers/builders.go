@@ -58,9 +58,10 @@ func PlaceholderKeyIn(total int, keyLen int) string {
 }
 
 func UpdateFieldSetDiff(mod util.FieldSet, db util.FieldSet, key util.FieldSet) (fn []string, targs []interface{}, isEmpty bool) {
-	diff := mod.Filter(util.UpdateableFields).Diff(db)
+	diff := mod.Filter(util.UpdateableField).Diff(db)
+	fmt.Println(len(diff.FieldNameList(nil)))
 	if isEmpty = diff.Filter(util.RemoveUpdatedAt).IsEmpty(); isEmpty {
-		return
+		return nil, nil, true
 	}
 
 	fn = diff.FieldNameList(nil)

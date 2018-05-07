@@ -99,10 +99,10 @@ func (c CRUD) Delete(ctx context.Context, key util.EntityKey) (err error) {
 	return
 }
 
-func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (err error) {
+func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (err error, didUpdate bool) {
 	db, err := GetQueryerFromContext(ctx)
 	if err != nil {
-		return err
+		return err, false
 	}
 
 	//Get entity from database for comparison
@@ -122,7 +122,7 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 			}).Error(err)
 			return
 		}
-		return err
+		return err, false
 	}
 
 	stmt := c.gen.UpdateStmt(dfn)
@@ -133,12 +133,13 @@ func (c CRUD) Update(ctx context.Context, key util.EntityKey, mod util.Entity) (
 		c.log.WithFields(log.Fields{
 			"values": targs,
 		}).Error(err)
-		return err
+		return err, false
 	}
 	c.log.WithFields(log.Fields{
 		"values": targs,
 	}).Info("Successfully updated")
 
+	didUpdate = true
 	return
 }
 
