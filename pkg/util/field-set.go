@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"time"
@@ -147,6 +148,18 @@ type FieldSet struct {
 	fls  []Field
 }
 
+func (f FieldSet) Copy() FieldSet {
+	nfs := FieldSet{}
+	nfs.name = f.name
+
+	nfs.fls = make([]Field, len(f.fls))
+	for i, v := range f.fls {
+		nfs.fls[i] = v
+	}
+
+	return nfs
+}
+
 func (f FieldSet) Name() string {
 	return f.name
 }
@@ -281,8 +294,20 @@ func (f FieldSet) FieldNameList(fn func(string) string) (fl []string) {
 	return
 }
 
+func (f FieldSet) TransformFieldName(fn func(string) string) (nfs FieldSet) {
+	nfs = f.Copy()
+	for i, v := range f.fls {
+		nfs.fls[i].name = fn(v.name)
+	}
+	return
+}
+
 func (f FieldSet) IsEmpty() bool {
 	return len(f.fls) == 0
+}
+
+func (f FieldSet) IsZero() bool {
+	return len(f.NonZeroFields().fls) == 0 || f.IsEmpty()
 }
 
 func (f FieldSet) Filter(filterList ...func(*Field) bool) (n FieldSet) {
@@ -301,10 +326,22 @@ func (f FieldSet) Filter(filterList ...func(*Field) bool) (n FieldSet) {
 	}
 	return
 }
+
+func (f FieldSet) NonZeroFields() (n FieldSet) {
+	return f.Filter(NonZero)
+}
+
+func (f FieldSet) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(f.Filter(NonZero).Map())
+}
+
 func UpdateableField(f *Field) bool {
 	return f.canUpdate && !f.IsZero()
 }
 
 func RemoveUpdatedAt(f *Field) bool {
 	return !(f.name == "UpdatedAt")
+}
+func NonZero(f *Field) bool {
+	return !f.IsZero()
 }
